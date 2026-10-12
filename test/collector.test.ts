@@ -25,3 +25,7 @@ test('wallet summary preserves assertion boundary and omits memos and addresses'
  const summary=inspectWalletExport({txid:'a'.repeat(64),spends:[],outputs:[{pool:'orchard',address:'private-address',memo:'private-memo'}]});
  assert.equal(summary.reportedRecipients,1);assert.ok(!JSON.stringify(summary).includes('private-'));assert.throws(()=>inspectWalletExport({txid:'a'.repeat(64),spends:[],outputs:[{pool:'unknown'}]}));
 });
+test('collector uses edge-compatible manual redirects and rejects redirect responses',async()=>{
+ const transport:typeof fetch=async(_input,init)=>{assert.equal(init?.redirect,'manual');return new Response(null,{status:302,headers:{Location:'http://internal'}});};
+ const response=await handleApi(req('/api/zcash-transaction',{txid:'a'.repeat(64),network:'mainnet'}),{},transport);assert.equal(response.status,400);assert.ok(!(await response.text()).includes('internal'));
+});

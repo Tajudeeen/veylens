@@ -9,7 +9,7 @@ async function bounded(response:Response,max=2_000_000):Promise<unknown>{
 const obj=(x:unknown):x is Record<string,unknown>=>!!x&&typeof x==='object'&&!Array.isArray(x);
 export async function handleApi(request:Request,env:CollectorEnv,transport:typeof fetch=fetch):Promise<Response>{
  const url=new URL(request.url);
- if(url.pathname==='/api/capabilities')return reply({zcashMainnet:true,zcashTestnet:!!env.ZEBRA_RPC_URL&&env.ZEBRA_NETWORK==='testnet',source:env.ZEBRA_RPC_URL?'configured-node':'public-explorer',oneclickStatus:true});
+ if(url.pathname==='/api/capabilities')return reply({zcashMainnet:!env.ZEBRA_RPC_URL||env.ZEBRA_NETWORK==='mainnet',zcashTestnet:!!env.ZEBRA_RPC_URL&&env.ZEBRA_NETWORK==='testnet',source:env.ZEBRA_RPC_URL?'configured-node':'public-explorer',oneclickStatus:true});
  if(request.method!=='POST')return reply({error:'POST required.'},405);
  if(request.headers.get('Origin')!==url.origin)return reply({error:'Same-origin request required.'},403);
  if(!request.headers.get('Content-Type')?.startsWith('application/json'))return reply({error:'JSON required.'},415);
@@ -20,17 +20,17 @@ export async function handleApi(request:Request,env:CollectorEnv,transport:typeo
    const address=raw['depositAddress'],memo=raw['memo'];if(typeof address!=='string'||address.length<5||address.length>512||/\s/.test(address))throw new Error('Enter a deposit address.');
    if(memo!==undefined&&(typeof memo!=='string'||memo.length>256))throw new Error('Invalid deposit memo.');
    const target=new URL('https://1click.chaindefuser.com/v0/status');target.searchParams.set('depositAddress',address);if(memo)target.searchParams.set('depositMemo',String(memo));
-   data=await bounded(await transport(target,{signal,headers:env.ONECLICK_API_KEY?{Authorization:`Bearer ${env.ONECLICK_API_KEY}`}:{},redirect:'error'}));
+   data=await bounded(await transport(target,{signal,headers:env.ONECLICK_API_KEY?{Authorization:`Bearer ${env.ONECLICK_API_KEY}`}:{},redirect:'manual'}));
   }else if(url.pathname==='/api/zcash-transaction'){
    const txid=raw['txid'],network=raw['network'];if(typeof txid!=='string'||!/^[a-f\d]{64}$/i.test(txid))throw new Error('Enter a 64-character transaction ID.');
    if(network!=='mainnet'&&network!=='testnet')throw new Error('Choose a network.');
    if(env.ZEBRA_RPC_URL){
     if(env.ZEBRA_NETWORK!==network)throw new Error("Choose the configured node network.");
-    const result=await bounded(await transport(env.ZEBRA_RPC_URL,{method:'POST',signal,redirect:'error',headers:{'Content-Type':'application/json',...(env.ZEBRA_RPC_AUTH?{Authorization:env.ZEBRA_RPC_AUTH}:{})},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getrawtransaction',params:[txid,0]})}));
+    const result=await bounded(await transport(env.ZEBRA_RPC_URL,{method:'POST',signal,redirect:'manual',headers:{'Content-Type':'application/json',...(env.ZEBRA_RPC_AUTH?{Authorization:env.ZEBRA_RPC_AUTH}:{})},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getrawtransaction',params:[txid,0]})}));
     if(!obj(result)||result['error']||typeof result['result']!=='string')throw new Error('Node returned no raw transaction.');data={txid:txid.toLowerCase(),hex:result['result']};
    }else{
     if(network!=='mainnet')throw new Error('Testnet requires a configured node.');
-    const result=await bounded(await transport(`https://api.zecblock.com/v1/transactions/${txid.toLowerCase()}/raw`,{signal,redirect:'error'}));
+    const result=await bounded(await transport(`https://api.zecblock.com/v1/transactions/${txid.toLowerCase()}/raw`,{signal,redirect:'manual'}));
     if(!obj(result)||!obj(result['data'])||typeof result['data']['hex']!=='string')throw new Error('Explorer returned no raw transaction.');data={txid:txid.toLowerCase(),hex:result['data']['hex']};
    }
   }else return reply({error:'Unknown endpoint.'},404);
