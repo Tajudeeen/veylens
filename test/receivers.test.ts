@@ -1,0 +1,4 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {inspectReceiver} from '../src/receivers.js';
+const vectors=JSON.parse(readFileSync('test/fixtures/addresses/unified-address-vectors.json','utf8')).slice(2);
+test('all 60 official Unified Address vectors reproduce every encoded receiver',()=>{for(const v of vectors){const r=inspectReceiver(v[6],'mainnet');for(let i=0;i<4;i++)assert.equal(r.receivers.find(x=>x.typecode===i)?.payloadHex??null,v[i]);if(v[4]!==null)assert.equal(r.receivers.find(x=>x.typecode===v[4])!.payloadHex,v[5]);}});
+test('address checksum, truncation and cross-network rejection are explicit',()=>{const a=vectors[0][6];assert.throws(()=>inspectReceiver(a.slice(0,-1)+'x','mainnet'));assert.throws(()=>inspectReceiver(a,'testnet'));assert.throws(()=>inspectReceiver('u1fake','mainnet'));});

@@ -1,15 +1,12 @@
 import { isZcashEvidence, reviewZcashEvidence, wrapNodeTransaction } from "../zcashEvidence.js";
-import { ZCASH_SAMPLE } from "./zcashSample.js";
 import type { Finding, Flow, Report } from "../types.js";
 import { isProviderInput, reviewProviderInput, digestInput, checkSourceRecord, declaredEvidence } from "../evidence.js";
-import { PROVIDER_SAMPLE } from "./providerSample.js";
 import type { SignedReport } from "../attest.js";
 import { runAudit } from "../engine.js";
 import { parseFlow } from "../validate.js";
 import { VERDICT, SEVERITY_LABEL, summarize } from "../summary.js";
 import { signReportWeb, verifySignedReportWeb } from "./attestWeb.js";
 import { describeEvent, offsetLabel } from "./describe.js";
-import { LEAK_FLOW, CLEAN_FLOW } from "./samples.js";
 
 const MAX_INPUT_CHARS = 2_000_000;
 const NO_ED25519 =
@@ -144,7 +141,9 @@ function render(report: Report, flow: Flow | null, signed: SignedReport | null):
   currentFlowId = report.flowId;
   byId("r-flow").textContent = report.flowId;
   const verdict = byId("r-verdict");
-  verdict.textContent = VERDICT[report.overallResult];
+  verdict.textContent = document.getElementById("risk-status") ? (report.findings.some(f=>f.severity==="high") ? "High risk signal" : report.findings.some(f=>f.severity==="medium") ? "Risk signals found" : "No covered pattern matched") : VERDICT[report.overallResult];
+  const coverage = document.getElementById("risk-status");
+  if (coverage) coverage.textContent = "Evidence incomplete. " + (report.evidence?.gaps.join(" ") ?? "This is a supplied flow description.");
   verdict.dataset["result"] = report.overallResult;
   byId("r-summary").textContent = summarize(report.findings, report.overallResult);
 
@@ -183,7 +182,7 @@ function render(report: Report, flow: Flow | null, signed: SignedReport | null):
 }
 
 let inputRevision = 0;
-async function runAuditFromInput(): Promise<void> {
+export async function runAuditFromInput(): Promise<void> {
   const revision = inputRevision;
   clearError();
   byId("results").hidden = true;
@@ -219,11 +218,12 @@ async function runAuditFromInput(): Promise<void> {
   if (revision === inputRevision) render(report, flow, signed);
 }
 
-function loadSample(flow: Flow): void {
+export function loadInput(raw: unknown, run = false): void {
   inputRevision++;
-  byId<HTMLTextAreaElement>("flow-input").value = JSON.stringify(flow, null, 2);
+  byId<HTMLTextAreaElement>("flow-input").value = JSON.stringify(raw, null, 2);
   clearError();
   byId("results").hidden = true;
+  if (run) void runAuditFromInput();
 }
 
 export async function checkSigned(text: string, statusId: string): Promise<void> {
@@ -265,8 +265,6 @@ function initApp(): void {
 
   run.addEventListener("click", () => void runGuarded());
   input.addEventListener("input", () => { inputRevision++; byId("results").hidden = true; clearError(); });
-  byId("load-leak").addEventListener("click", () => loadSample(LEAK_FLOW));
-  byId("load-clean").addEventListener("click", () => loadSample(CLEAN_FLOW));
   byId("wrap-node")?.addEventListener("click", () => {
     try {
       const network = (byId("zcash-network") as HTMLSelectElement).value;
@@ -277,32 +275,6 @@ function initApp(): void {
       clearError(); byId("results").hidden = true;
     } catch (e) { showError(e instanceof Error ? e.message : "Could not import node JSON."); }
   });
-  byId("load-zcash")?.addEventListener("click", () => {
-    inputRevision++; input.value = JSON.stringify(ZCASH_SAMPLE, null, 2);
-    clearError(); byId("results").hidden = true;
-  });
-  byId("load-provider")?.addEventListener("click", () => {
-    inputRevision++;
-    input.value = JSON.stringify(PROVIDER_SAMPLE, null, 2);
-    clearError(); byId("results").hidden = true;
-  });
-  byId("load-reuse-config")?.addEventListener("click", () => {
-    inputRevision++;
-    input.value = JSON.stringify({ format: "veylens-evidence/1", provider: PROVIDER_SAMPLE,
-      context: { shieldingSourceAddresses: [PROVIDER_SAMPLE.quoteRequest.refundTo] } }, null, 2);
-    clearError(); byId("results").hidden = true;
-  });
-  byId("load-safer-config")?.addEventListener("click", () => {
-    inputRevision++;
-    input.value = JSON.stringify({ ...PROVIDER_SAMPLE, signature: "", quoteRequest: {
-      ...PROVIDER_SAMPLE.quoteRequest, refundType: "INTENTS", refundTo: "illustrative-intents-account.near" } }, null, 2);
-    clearError(); byId("results").hidden = true;
-  });
-  byId("hero-load-case")?.addEventListener("click", () => {
-    loadSample(LEAK_FLOW);
-    void runGuarded();
-  });
-
   byId<HTMLInputElement>("file-input").addEventListener("change", (ev) => {
     const file = (ev.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -367,8 +339,7 @@ function init(): void {
   document.getElementById("v-source-run")?.addEventListener("click", () => void checkSourceFromInput());
   if (document.getElementById("flow-input")) {
     initApp();
-    const sample = new URLSearchParams(window.location.search).get("example");
-    if (sample === "leak" || sample === "clean") loadSample(sample === "leak" ? LEAK_FLOW : CLEAN_FLOW);
+
   } else if (document.getElementById("v-run")) {
     byId("v-run")?.addEventListener("click", () => void checkSigned(byId<HTMLTextAreaElement>("v-in").value, "v-out"));
   }

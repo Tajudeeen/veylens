@@ -291,3 +291,14 @@ See [`docs/06-evidence-adapter.md`](docs/06-evidence-adapter.md) and
 
 ## License
 MIT.
+
+### Working environment, v0.7
+
+The workspace now starts empty and collects real 1Click status or Zcash mainnet
+raw records through a bounded same-origin Worker. Examples live on `/demo.html`.
+It also inspects Unified Address receivers and z_viewtransaction exports locally.
+Risk findings and missing evidence appear separately. Full signed reports support
+source replay; a separate redacted summary omits sensitive identifiers.
+
+See [the collection and evidence contract](docs/09-working-product.md) for runtime
+configuration, source trust boundaries, unsupported cases and remaining milestones.

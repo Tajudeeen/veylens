@@ -8,3 +8,7 @@ license is included at `test/fixtures/zcash/LICENSE-MIT`.
 The decoder is implemented against ZIP-225 and ZIP-244, with the official
 vectors used as independent expected results. Runtime dependencies retain
 their respective package licenses.
+
+The Unified Address vectors in `test/fixtures/addresses/unified-address-vectors.json`
+are also from zcash/zcash-test-vectors under the same upstream MIT license.
+They are synthetic test material and are excluded from the production bundle.
