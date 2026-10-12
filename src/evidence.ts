@@ -1,3 +1,4 @@
+import {isCase,reviewCase} from './case.js';
 import { isZcashEvidence, reviewZcashEvidence } from "./zcashEvidence.js";
 import { verifyQuoteSignature, type QuoteResponse } from "@defuse-protocol/one-click-sdk-typescript";
 import { parseFlow } from "./validate.js";
@@ -129,6 +130,10 @@ export async function reviewProviderInput(raw: unknown, now = Math.floor(Date.no
 /** Re-checks the actual source record; a report signature alone cannot authenticate its claims. */
 export async function checkSourceRecord(raw: unknown, report: Report): Promise<{ valid: boolean; reason: string }> {
   if (!report.evidence || await digestInput(raw) !== report.evidence.inputDigest) return { valid: false, reason: "Canonical input digest does not match this report." };
+  if (isCase(raw)) {
+    const reviewed=await reviewCase(raw,report.generatedAt);
+    return reviewed.ok&&stableJson(reviewed.report)===stableJson(report)?{valid:true,reason:"Case evidence, collection receipts and findings match source replay. Consensus and ownership remain outside scope."}:{valid:false,reason:"Case source replay does not match."};
+  }
   if (isZcashEvidence(raw)) {
     const reviewed = await reviewZcashEvidence(raw, report.generatedAt);
     if (!reviewed.ok || stableJson(reviewed.report) !== stableJson(report)) return { valid: false, reason: "Zcash source re-analysis does not match the report." };

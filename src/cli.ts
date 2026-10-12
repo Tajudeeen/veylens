@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {isCase,reviewCase} from './case.js';
 import { isZcashEvidence, reviewZcashEvidence } from "./zcashEvidence.js";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -108,7 +109,7 @@ async function cmdAudit(args: string[]): Promise<void> {
 
   const keyPath = options.get("--key");
   const raw = readJson<unknown>(flowPath);
-  const parsed = isZcashEvidence(raw) ? await reviewZcashEvidence(raw) : isProviderInput(raw) ? await reviewProviderInput(raw) : parseFlow(raw);
+  const parsed = isCase(raw) ? await reviewCase(raw) : isZcashEvidence(raw) ? await reviewZcashEvidence(raw) : isProviderInput(raw) ? await reviewProviderInput(raw) : parseFlow(raw);
   if (!parsed.ok) {
     console.error(`veylens: ${flowPath} is not a valid supported input:`);
     for (const e of parsed.errors) console.error(`  - ${e}`);

@@ -1,3 +1,4 @@
+import {isCase,reviewCase} from '../case.js';
 import { isZcashEvidence, reviewZcashEvidence, wrapNodeTransaction } from "../zcashEvidence.js";
 import type { Finding, Flow, Report } from "../types.js";
 import { isProviderInput, reviewProviderInput, digestInput, checkSourceRecord, declaredEvidence } from "../evidence.js";
@@ -162,6 +163,10 @@ function render(report: Report, flow: Flow | null, signed: SignedReport | null):
       el("ul", null, ...report.evidence.gaps.map(g => el("li", null, g))));
   }
 
+  const checkpoints=document.getElementById('case-checkpoints');
+  if(checkpoints){const facts=report.evidence?.facts.filter(f=>f.path.startsWith('case.')||f.path.startsWith('remedy.'))??[];
+    const labels:Record<string,string>={providerOrigin:'Provider record',rawRecords:'Transaction evidence',refundReceiver:'Refund receivers',refundAssociation:'Refund association',refundCandidates:'Matching refund candidates',shieldingSource:'Selected shielding transaction',refundTransaction:'Selected refund transaction'};
+    checkpoints.replaceChildren(...(facts.length?[el('h3','sub','Case checkpoints and remedies'),...facts.map(f=>el('p',null,el('span',null,(labels[f.path.replace('case.','')]??f.path.replace('remedy.','Remedy for '))+': '),f.value,el('span','fine',' '+f.trust)))]:[]));}
   const attest = byId("r-attest");
   if (signed) {
     attest.hidden = false;
@@ -198,8 +203,8 @@ export async function runAuditFromInput(): Promise<void> {
   }
   let report: Report;
   let flow: Flow | null = null;
-  if (isProviderInput(raw) || isZcashEvidence(raw)) {
-    const imported = isZcashEvidence(raw) ? await reviewZcashEvidence(raw) : await reviewProviderInput(raw);
+  if (isCase(raw) || isProviderInput(raw) || isZcashEvidence(raw)) {
+    const imported = isCase(raw) ? await reviewCase(raw) : isZcashEvidence(raw) ? await reviewZcashEvidence(raw) : await reviewProviderInput(raw);
     if (!imported.ok) return showError("That provider record has problems.", imported.errors);
     report = imported.report;
   } else {

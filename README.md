@@ -1,5 +1,29 @@
 # Veylens
 
+Review Zcash integration refund paths using original provider records and raw
+transaction evidence. Find public-address reuse, inspect refund exposure, understand
+missing evidence, and export a report that others can independently replay.
+
+- [Working environment](https://veylens-privacy-workspace.deeen-code.chatgpt.site/workspace.html), owner-private until viewer access is granted.
+- [Isolated examples](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html).
+- [Current judge walkthrough](docs/07-judge-walkthrough.md).
+- [Case and collector trust contract](docs/10-case-workflow.md).
+
+Version 0.8 combines provider records, raw transactions and shielding prevouts into
+one case. Live observations receive pinned-key collector signatures. Provider
+refund candidates require exact amount, destination and hash matches. Case reports
+include actionable remedies, source export, independent replay and baseline
+comparison. Production starts empty and never substitutes examples for failures.
+
+A collector receipt authenticates collection origin. Transaction IDs authenticate
+raw effects. Neither proves consensus, wallet ownership or complete privacy.
+A fully attributed real refund case has not been independently established by this
+repository. Structural regression cases remain clearly labelled test material.
+
+The sections below document earlier implementation history as well as CLI usage.
+Use the current walkthrough for the production interface.
+
+
 A privacy-leak auditor for Zcash shielded cross-chain transaction flows.
 
 Veylens reviews a supplied description of a Zcash cross-chain flow for
@@ -265,7 +289,7 @@ node dist/src/cli.js audit /tmp/transaction-evidence.json --json
 ```
 
 Capture is read-only. The public explorer sees the requested transaction ID.
-The application itself stays offline. See [`docs/08-zcash-evidence.md`](docs/08-zcash-evidence.md).
+The v0.6 importer is local. In v0.8, explicit live collection sends selected identifiers to the named source. See [`docs/08-zcash-evidence.md`](docs/08-zcash-evidence.md).
 
 ## Status
 
@@ -280,8 +304,7 @@ Implemented in v0.6.0: raw Zcash v4/v5 decoding, transaction effect IDs, ZIP-244
 authorization fingerprints, P2PKH/P2SH transparent address checks, previous-output
 relationships, and explicit-network node-export import.
 
-Remaining: independent canonical-chain anchoring, shielded receiver decoding,
-wallet ownership, an attributed real refund walkthrough, and real-browser/device QA.
+Remaining: independent canonical-chain anchoring, wallet ownership, a fully attributed real refund walkthrough, and real-browser/device QA. Receiver encoding inspection is implemented.
 No Zebra or librustzcash integration is claimed. The legacy Flow path retains
 its four rules but cannot produce a privacy pass without authentic evidence.
 A declared source match is a configuration risk, not proof of on-chain leakage.
