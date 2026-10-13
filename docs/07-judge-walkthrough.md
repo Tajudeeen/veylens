@@ -1,7 +1,24 @@
-# Veylens judge walkthrough, v0.8
+# Veylens judge walkthrough, v0.9
 
 The production workspace contains no sample loaders. Examples are isolated on
 `/demo.html`. Arrange viewer access to the private publication before submission.
+
+## Real public-testnet regression
+
+1. Download `examples/testnet-refund/vulnerable.case.json` from the repository.
+2. Open Workspace and use Import case evidence. The importer selects Testnet.
+3. Observe High risk and `public-source-address-reuse-in-supplied-transactions`.
+4. Inspect the source prevout and refund output. Both identify the same real test
+   address. The refund output contains exactly 3,000,000 zatoshis.
+5. Export the signed report and its source, then verify and replay them.
+6. Import the vulnerable source as the comparison baseline. Import
+   `examples/testnet-refund/corrected.case.json` as the current case and compare.
+7. Observe removed reuse and transparent-output findings. The corrected result
+   remains insufficient because shielded delivery and full privacy require more evidence.
+
+These are mined public-testnet wallet transactions. The experiment's refund roles
+are operator assertions, and it does not execute Zashi or NEAR Intents.
+See [the source observations and reproduction limits](11-testnet-refund-regression.md).
 
 ## Actual mainnet collection and authenticated replay
 

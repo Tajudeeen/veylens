@@ -1,0 +1,12 @@
+{
+  "removed": [
+    "transparent-output-to-declared-refund-destination",
+    "public-source-address-reuse-in-supplied-transactions"
+  ],
+  "added": [],
+  "remaining": [],
+  "evidenceWarnings": [
+    "Shielded refund delivery cannot be established from public transaction bytes alone."
+  ],
+  "notice": "Comparison covers the supplied cases only. Missing findings do not establish privacy or equivalent evidence coverage."
+}

@@ -42,6 +42,11 @@ export async function reviewCase(raw:unknown,now=Math.floor(Date.now()/1000)):Pr
  else return {ok:false,errors:['Import a provider record or at least one transaction.']};
  if(!result.ok)return result;
  const report=result.report,evidence=report.evidence!;
+ if(refundId)report.flowId=refundId;
+ if(refundId&&refundTo&&!matchingAddress){
+  evidence.gaps=evidence.gaps.filter(g=>!g.startsWith('No refund transaction/destination pair was supplied.'));
+  if(transparent.length)evidence.gaps.push('The selected refund transaction has no positive transparent output to the configured receiver.');
+ }
  if(rows.length&&providerReport?.ok){report.findings.push(...providerReport.report.findings);evidence.facts.push(...providerReport.report.evidence!.facts.map(f=>({...f,path:'provider.'+f.path})));evidence.quoteSignature=providerReport.report.evidence!.quoteSignature!;}
  let collectedProvider=false;
  if(raw['providerReceipt']!==undefined){const lookup=raw['providerLookup'];if(!obj(lookup)||typeof lookup['depositAddress']!=='string'||typeof lookup['memo']!=='string'||!await verifyCollection(raw['provider'],raw['providerReceipt'],'oneclick-status',{depositAddress:lookup['depositAddress'],memo:lookup['memo']}))return {ok:false,errors:['Provider collection receipt is invalid or bound to different data.']};collectedProvider=true;}
@@ -62,7 +67,7 @@ export async function reviewCase(raw:unknown,now=Math.floor(Date.now()/1000)):Pr
  if(refundTo&&!transparent.length)evidence.gaps.push('Shielded refund delivery cannot be established from public transaction bytes alone.');
  for(const rule of new Set(report.findings.map(f=>f.ruleId))){const remedy=rule.includes('reuse')?'Use a fresh supported refund destination that is not a shielding source, and test the actual refund path.':rule.includes('transparent')?'Prefer an integration-supported shielded refund path. Verify actual delivery; an address encoding alone is insufficient.':'Resolve the authenticity or configuration issue before relying on this record.';evidence.facts.push({path:`remedy.${rule}`,value:remedy,trust:'engineering-recommendation'});}
  evidence.format='veylens-case-report/1';evidence.inputDigest=await digestInput(raw);evidence.gaps=[...new Set(evidence.gaps)];evidence.scope='Combined refund-path review: authenticated configuration, checked public relationships and explicit attribution boundaries';
- report.rulesetVersion='case-review/1.0.0';report.overallResult=report.findings.some(f=>f.severity==='high')?'fail':'insufficient';return {ok:true,report};
+ report.rulesetVersion='case-review/1.1.0';report.overallResult=report.findings.some(f=>f.severity==='high')?'fail':'insufficient';return {ok:true,report};
 }
 export function compareCaseReports(before:{findings:Array<{ruleId:string;severity:string}>;evidence?:{gaps:string[];facts:Array<{path:string;value:string}>;quoteSignature?:string}},after:{findings:Array<{ruleId:string;severity:string}>;evidence?:{gaps:string[];facts:Array<{path:string;value:string}>;quoteSignature?:string}}):{removed:string[];added:string[];remaining:string[];evidenceWarnings:string[];notice:string}{
  const a=new Set(before.findings.map(f=>f.ruleId)),b=new Set(after.findings.map(f=>f.ruleId));

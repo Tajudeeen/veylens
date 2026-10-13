@@ -89,10 +89,9 @@ function printReportHuman(signed: SignedReport, jsonPath: string, htmlPath: stri
   console.log("");
   console.log(
     c(
-      "Note: this checks the named rule set only (refund address reuse, " +
-        "unjustified unshielded hops, timing correlation, turnstile exposure). " +
-        "It is not a formal proof that the flow has no privacy leak outside " +
-        "those four patterns.",
+      "Review scope follows the report's ruleset and evidence record. " +
+        "A missing finding does not establish privacy. Source attribution, " +
+        "chain validity and ownership require their own evidence.",
       "dim",
     ),
   );

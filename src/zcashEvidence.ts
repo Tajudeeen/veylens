@@ -3,7 +3,7 @@ import { digestInput, reviewProviderInput, type EvidenceResult } from "./evidenc
 import type { Evidence, Finding } from "./types.js";
 const obj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
 const id = (x: unknown): x is string => typeof x === "string" && /^[0-9a-fA-F]{64}$/.test(x);
-export const ZCASH_RULESET = "zcash-content/1.0.0";
+export const ZCASH_RULESET = "zcash-content/1.1.0";
 export function isZcashEvidence(raw: unknown): boolean { return obj(raw) && raw["format"] === "veylens-zcash-evidence/1"; }
 
 export async function reviewZcashEvidence(raw: unknown, now = Math.floor(Date.now() / 1000)): Promise<EvidenceResult> {
@@ -38,7 +38,7 @@ export async function reviewZcashEvidence(raw: unknown, now = Math.floor(Date.no
     facts.push({ path: `${root}.txid`, value: txid, trust: "raw-effects-match-supplied-id" });
     if (tx.authDigest) facts.push({ path: `${root}.authDigestBytes`, value: tx.authDigest, trust: "locally-computed-fingerprint-not-proof-validation" });
     facts.push({ path: `${root}.version`, value: String(tx.version), trust: "decoded-from-id-matched-bytes" });
-    facts.push({ path: `${root}.shieldedCounts`, value: `${tx.saplingSpends} Sapling spends, ${tx.saplingOutputs} Sapling outputs, ${tx.orchardActions} Orchard actions`, trust: "decoded-from-id-matched-bytes" });
+    facts.push({ path: `${root}.shieldedCounts`, value: `${tx.saplingSpends} Sapling spends, ${tx.saplingOutputs} Sapling outputs, ${tx.orchardActions} Orchard actions, ${tx.ironwoodActions} Ironwood actions`, trust: "decoded-from-id-matched-bytes" });
     for (const out of tx.outputs) {
       facts.push({ path: `${root}.outputs[${out.index}]`, value: `${out.valueZat} zatoshis to ${out.address ?? "unrecognized script"}`, trust: "decoded-from-id-matched-bytes" });
     }
@@ -78,7 +78,7 @@ export async function reviewZcashEvidence(raw: unknown, now = Math.floor(Date.no
         message: "ID-matched transaction bytes contain a positive transparent output to the declared refund destination. This verifies the public output, not that the transaction is a provider refund or canonically mined.", eventIds: [refundId, "refundTo"] });
       if (shieldId) {
         const shield = decoded.get(shieldId)!;
-        const net = BigInt(shield.valueBalanceSaplingZat) + BigInt(shield.valueBalanceOrchardZat);
+        const net = BigInt(shield.valueBalanceSaplingZat) + BigInt(shield.valueBalanceOrchardZat) + BigInt(shield.valueBalanceIronwoodZat);
         const missingPrevouts: string[] = [];
         const sourceAddresses: string[] = [];
         for (const input of shield.inputs) {
@@ -96,7 +96,7 @@ export async function reviewZcashEvidence(raw: unknown, now = Math.floor(Date.no
           }
         };
         walk(shield);
-        const hasShieldedOutputs = shield.saplingOutputs > 0 || (shield.orchardActions > 0 && ((shield.orchardFlags ?? 0) & 2) !== 0);
+        const hasShieldedOutputs = shield.saplingOutputs > 0 || (shield.orchardActions > 0 && ((shield.orchardFlags ?? 0) & 2) !== 0) || (shield.ironwoodActions > 0 && ((shield.ironwoodFlags ?? 0) & 2) !== 0);
         if (publicAncestors.has(refundId)) gaps.push("The declared refund is an ancestor of the shielding transaction. It cannot demonstrate a later refund-address reuse flow.");
         else if (!hasShieldedOutputs || net >= 0n) gaps.push("The declared shielding transaction does not show net value entering the supported shielded pools.");
         else if (sourceAddresses.includes(refundTo)) {

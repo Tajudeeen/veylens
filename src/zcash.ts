@@ -38,10 +38,32 @@ function signed64(b: Uint8Array): bigint { const n = littleInt(b); return n >= 1
 export type ZcashNetwork = "mainnet" | "testnet";
 export interface TransparentOutput { index: number; valueZat: string; scriptHex: string; address: string | null; }
 export interface DecodedZcash {
-  version: 4 | 5; txid: string; authDigest: string | null; branchId: string | null;
+  version: 4 | 5 | 6; txid: string; authDigest: string | null; branchId: string | null;
   inputs: Array<{ txid: string; index: number; coinbase: boolean }>;
   outputs: TransparentOutput[]; saplingSpends: number; saplingOutputs: number; orchardActions: number;
   valueBalanceSaplingZat: string; valueBalanceOrchardZat: string; orchardFlags: number | null;
+  ironwoodActions: number; valueBalanceIronwoodZat: string; ironwoodFlags: number | null;
+}
+function readOrchardBundle(r: Reader, version: 5 | 6, ironwood: boolean) {
+  const count = r.compact();
+  const actions = Array.from({ length: count }, () => r.take(820));
+  const flags = count ? r.take(1) : new Uint8Array();
+  if (count && (flags[0]! & ~(ironwood ? 7 : 3)) !== 0) throw new Error("Reserved shielded bundle flags are not supported.");
+  const balance = count ? r.take(8) : new Uint8Array(8);
+  const anchor = count ? r.take(32) : new Uint8Array();
+  const proof = count ? r.vector() : new Uint8Array();
+  const signatures = r.take(64 * count);
+  const binding = count ? r.take(64) : new Uint8Array();
+  const domains = ironwood
+    ? ["ZTxIdIronwd_H_v6", "ZTxIdIrnActCH_v6", "ZTxIdIrnActMH_v6", "ZTxIdIrnActNH_v6", "ZTxAuthIrnwdH_v6"] as const
+    : [version === 6 ? "ZTxIdOrchardH_v6" : "ZTxIdOrchardHash", "ZTxIdOrcActCHash", "ZTxIdOrcActMHash", "ZTxIdOrcActNHash", version === 6 ? "ZTxAuthOrchaH_v6" : "ZTxAuthOrchaHash"] as const;
+  const effect = hash(domains[0], ...(count ? [
+    hash(domains[1], ...actions.map(a => cat(a.slice(32, 64), a.slice(96, 212)))),
+    hash(domains[2], ...actions.map(a => a.slice(212, 724))),
+    hash(domains[3], ...actions.map(a => cat(a.slice(0, 32), a.slice(64, 96), a.slice(724, 820)))),
+    flags, balance, ...(version === 5 ? [anchor] : [])] : []));
+  const auth = hash(domains[4], proof, signatures, binding, ...(version === 6 ? [anchor] : []));
+  return { count, flags: count ? flags[0]! : null, balance: signed64(balance).toString(), effect, auth };
 }
 function addressForScript(script: Uint8Array, network: ZcashNetwork): string | null {
   const s = hexOf(script);
@@ -67,11 +89,12 @@ export function decodeZcashTransaction(hex: string, network: ZcashNetwork): Deco
   if (network !== "mainnet" && network !== "testnet") throw new Error("Specify mainnet or testnet.");
   const bytes = bytesOf(hex); const r = new Reader(bytes);
   const header = r.u32(); const version = header & 0x7fffffff;
-  if (header >>> 31 !== 1 || (version !== 4 && version !== 5)) throw new Error("Only overwintered Zcash v4 and ZIP-225 v5 are supported.");
+  if (header >>> 31 !== 1 || (version !== 4 && version !== 5 && version !== 6)) throw new Error("Only overwintered Zcash v4, v5 and NU6.3 v6 are supported.");
   const group = r.u32();
-  if (group !== (version === 4 ? 0x892f2085 : 0x26a7270a)) throw new Error("Unexpected version group ID.");
+  if (group !== (version === 4 ? 0x892f2085 : version === 5 ? 0x26a7270a : 0xd884b698)) throw new Error("Unexpected version group ID.");
   let branchBytes: Uint8Array | null = null;
-  if (version === 5) { branchBytes = r.take(4); r.take(8); }
+  if (version >= 5) { branchBytes = r.take(4); r.take(8); }
+  if (version === 6 && !["5b16a537", "d90a1977"].includes(hexOf(branchBytes!))) throw new Error("Unsupported v6 consensus branch.");
   const inputs: DecodedZcash["inputs"] = []; const prevouts: Uint8Array[] = []; const sequences: Uint8Array[] = []; const scripts: Uint8Array[] = [];
   const nInputs = r.compact();
   for (let i = 0; i < nInputs; i++) {
@@ -96,7 +119,8 @@ export function decodeZcashTransaction(hex: string, network: ZcashNetwork): Deco
     if (r.pos !== bytes.length) throw new Error("Trailing data or unsupported transaction extension.");
     return { version, txid: displayedHash(sha256(sha256(bytes))), authDigest: null, branchId: null, inputs, outputs,
       saplingSpends: nSpends, saplingOutputs: nShieldedOut, orchardActions: 0,
-      valueBalanceSaplingZat: signed64(balance).toString(), valueBalanceOrchardZat: "0", orchardFlags: null };
+      valueBalanceSaplingZat: signed64(balance).toString(), valueBalanceOrchardZat: "0", orchardFlags: null,
+      ironwoodActions: 0, valueBalanceIronwoodZat: "0", ironwoodFlags: null };
   }
   const nSpends = r.compact(); const spends = Array.from({ length: nSpends }, () => r.take(96));
   const nShieldedOut = r.compact(); const shieldedOut = Array.from({ length: nShieldedOut }, () => r.take(756));
@@ -104,30 +128,21 @@ export function decodeZcashTransaction(hex: string, network: ZcashNetwork): Deco
   const anchor = nSpends ? r.take(32) : new Uint8Array();
   const spendProofs = r.take(192 * nSpends); const spendSigs = r.take(64 * nSpends); const outputProofs = r.take(192 * nShieldedOut);
   const sapBinding = nSpends + nShieldedOut ? r.take(64) : new Uint8Array();
-  const nActions = r.compact(); const actions = Array.from({ length: nActions }, () => r.take(820));
-  const flags = nActions ? r.take(1) : new Uint8Array();
-  if (nActions && (flags[0]! & ~3) !== 0) throw new Error("Reserved Orchard flags are not supported.");
-  const orchardBalance = nActions ? r.take(8) : new Uint8Array(8);
-  const orchardAnchor = nActions ? r.take(32) : new Uint8Array();
-  const orchardProof = nActions ? r.vector() : new Uint8Array();
-  const orchardSigs = r.take(64 * nActions); const orchardBinding = nActions ? r.take(64) : new Uint8Array();
+  const orchard = readOrchardBundle(r, version, false);
+  const ironwood = version === 6 ? readOrchardBundle(r, version, true) : null;
   if (r.pos !== bytes.length) throw new Error("Trailing data or unsupported transaction extension.");
   const transparent = hash("ZTxIdTranspaHash", ...(nInputs + nOutputs ? [hash("ZTxIdPrevoutHash", ...prevouts), hash("ZTxIdSequencHash", ...sequences), hash("ZTxIdOutputsHash", ...outputBytes)] : []));
-  const spendHash = hash("ZTxIdSSpendsHash", ...(nSpends ? [hash("ZTxIdSSpendCHash", ...spends.map(s => s.slice(32, 64))), hash("ZTxIdSSpendNHash", ...spends.map(s => cat(s.slice(0, 32), anchor, s.slice(64, 96))))] : []));
+  const spendHash = hash("ZTxIdSSpendsHash", ...(nSpends ? [hash("ZTxIdSSpendCHash", ...spends.map(s => s.slice(32, 64))), hash(version === 6 ? "ZTxIdSSpendNH_v6" : "ZTxIdSSpendNHash", ...spends.map(s => cat(s.slice(0, 32), ...(version === 5 ? [anchor] : []), s.slice(64, 96))))] : []));
   const outputHash = hash("ZTxIdSOutputHash", ...(nShieldedOut ? [
     hash("ZTxIdSOutC__Hash", ...shieldedOut.map(s => s.slice(32, 148))),
     hash("ZTxIdSOutM__Hash", ...shieldedOut.map(s => s.slice(148, 660))),
     hash("ZTxIdSOutN__Hash", ...shieldedOut.map(s => cat(s.slice(0, 32), s.slice(660, 756))))] : []));
   const sapling = hash("ZTxIdSaplingHash", ...(nSpends + nShieldedOut ? [spendHash, outputHash, sapBalance] : []));
-  const orchard = hash("ZTxIdOrchardHash", ...(nActions ? [
-    hash("ZTxIdOrcActCHash", ...actions.map(a => cat(a.slice(32, 64), a.slice(96, 212)))),
-    hash("ZTxIdOrcActMHash", ...actions.map(a => a.slice(212, 724))),
-    hash("ZTxIdOrcActNHash", ...actions.map(a => cat(a.slice(0, 32), a.slice(64, 96), a.slice(724, 820)))),
-    flags, orchardBalance, orchardAnchor] : []));
-  const txDigest = hash(cat(ascii("ZcashTxHash_"), branchBytes!), hash("ZTxIdHeadersHash", bytes.slice(0, 20)), transparent, sapling, orchard);
+  const txDigest = hash(cat(ascii("ZcashTxHash_"), branchBytes!), hash("ZTxIdHeadersHash", bytes.slice(0, 20)), transparent, sapling, orchard.effect, ...(ironwood ? [ironwood.effect] : []));
   const authDigest = hash(cat(ascii("ZTxAuthHash_"), branchBytes!), hash("ZTxAuthTransHash", ...scripts),
-    hash("ZTxAuthSapliHash", spendProofs, spendSigs, outputProofs, sapBinding), hash("ZTxAuthOrchaHash", orchardProof, orchardSigs, orchardBinding));
+    hash(version === 6 ? "ZTxAuthSapliH_v6" : "ZTxAuthSapliHash", spendProofs, spendSigs, outputProofs, sapBinding, ...(version === 6 ? [anchor] : [])), orchard.auth, ...(ironwood ? [ironwood.auth] : []));
   return { version, txid: displayedHash(txDigest), authDigest: hexOf(authDigest), branchId: hexOf(branchBytes!), inputs, outputs,
-    saplingSpends: nSpends, saplingOutputs: nShieldedOut, orchardActions: nActions,
-    valueBalanceSaplingZat: signed64(sapBalance).toString(), valueBalanceOrchardZat: signed64(orchardBalance).toString(), orchardFlags: nActions ? flags[0]! : null };
+    saplingSpends: nSpends, saplingOutputs: nShieldedOut, orchardActions: orchard.count,
+    valueBalanceSaplingZat: signed64(sapBalance).toString(), valueBalanceOrchardZat: orchard.balance, orchardFlags: orchard.flags,
+    ironwoodActions: ironwood?.count ?? 0, valueBalanceIronwoodZat: ironwood?.balance ?? "0", ironwoodFlags: ironwood?.flags ?? null };
 }

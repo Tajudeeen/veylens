@@ -7,6 +7,17 @@ import {readFileSync} from 'node:fs';
 import {webcrypto} from 'node:crypto';
 import {JSDOM} from 'jsdom';
 let html='';before(()=>{execFileSync(process.execPath,['dist/src/web/build.js']);html=readFileSync('dist/client/workspace.html','utf8');});
+test('real NU7 case imports in the workspace and replays the source-bound report without network calls',async()=>{
+ const input=JSON.parse(readFileSync('examples/testnet-refund/vulnerable.case.json','utf8'));
+ let calls=0;const dom=load(async()=>{calls++;throw new Error('Unexpected network call');});const doc=dom.window.document;
+ const text=JSON.stringify(input);const file={size:text.length,text:async()=>text};
+ Object.defineProperty(doc.getElementById('case-file'),'files',{value:[file],configurable:true});doc.getElementById('case-file')!.dispatchEvent(new dom.window.Event('change'));
+ for(let n=0;n<200&&!(doc.getElementById('r-signed') as HTMLTextAreaElement).value;n++)await new Promise(resolve=>setTimeout(resolve,10));
+ assert.match(doc.getElementById('r-verdict')!.textContent!,/High risk/);
+ const signed=JSON.parse((doc.getElementById('r-signed') as HTMLTextAreaElement).value);
+ assert.equal((await checkSourceRecord(input,signed.report)).valid,true);
+ assert.equal(calls,0);dom.window.close();
+});
 const load=(transport:typeof fetch)=>new JSDOM(html,{url:'https://veylens.test/workspace.html',runScripts:'dangerously',beforeParse(w){Object.defineProperty(w,'crypto',{value:webcrypto});Object.assign(w,{TextEncoder,fetch:transport,AbortSignal,structuredClone});}});
 test('production bundle excludes fixtures and starts with empty evidence',()=>{
  const dom=load(async()=>Response.json({}));assert.equal((dom.window.document.getElementById('flow-input') as HTMLTextAreaElement).value,'');

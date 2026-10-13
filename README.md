@@ -8,8 +8,14 @@ missing evidence, and export a report that others can independently replay.
 - [Isolated examples](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html).
 - [Current judge walkthrough](docs/07-judge-walkthrough.md).
 - [Case and collector trust contract](docs/10-case-workflow.md).
+- [Real public-testnet refund regression](docs/11-testnet-refund-regression.md).
 
-Version 0.8 combines provider records, raw transactions and shielding prevouts into
+Version 0.9 adds NU6.3/NU7 v6 and Ironwood transaction evidence. A real public-testnet
+wallet regression now covers funding, shielding, transparent source-address reuse
+and a shielded comparison transaction. Download the original case files from
+[`examples/testnet-refund`](examples/testnet-refund) and import them into the workspace.
+
+The case workflow combines provider records, raw transactions and shielding prevouts into
 one case. Live observations receive pinned-key collector signatures. Provider
 refund candidates require exact amount, destination and hash matches. Case reports
 include actionable remedies, source export, independent replay and baseline
@@ -17,8 +23,9 @@ comparison. Production starts empty and never substitutes examples for failures.
 
 A collector receipt authenticates collection origin. Transaction IDs authenticate
 raw effects. Neither proves consensus, wallet ownership or complete privacy.
-A fully attributed real refund case has not been independently established by this
-repository. Structural regression cases remain clearly labelled test material.
+The public-testnet regression is a controlled wallet experiment, with external
+source observations of mined transactions. A real Zashi/NEAR Intents refund has
+not been independently attributed. Structural fixtures remain labelled test material.
 
 The sections below document earlier implementation history as well as CLI usage.
 Use the current walkthrough for the production interface.
