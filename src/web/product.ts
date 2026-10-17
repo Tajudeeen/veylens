@@ -55,7 +55,7 @@ get('collect')?.addEventListener('click',async()=>{
  }catch(e){if(draft.transactions.length||draft.provider)showDraft();status(e instanceof Error?e.message:'Collection failed.');}finally{button.disabled=false;for(const id of busyIds){const control=get(id) as HTMLInputElement|null;if(control)control.disabled=false;}}
 });
 get('review-case')?.addEventListener('click',()=>{roles();showDraft(true);});
-for(const id of ['case-shielding','case-refund'])get(id)?.addEventListener('input',()=>{const results=get('results');if(results)results.hidden=true;status('Case roles changed. Review attached evidence again.');});
+for(const id of ['case-shielding','case-refund'])get(id)?.addEventListener('input',()=>{const results=get('results');if(results)results.hidden=true;const empty=get("review-empty");if(empty)empty.hidden=false;status('Case roles changed. Review attached evidence again.');});
 get('clear-case')?.addEventListener('click',()=>{caseRevision++;draft={format:'veylens-case/1',network:value('lookup-network')==='testnet'?'testnet':'mainnet',transactions:[]};for(const id of ['case-shielding','case-refund','lookup-id','lookup-memo'])(get(id) as HTMLInputElement).value='';showDraft();status('Case cleared.');});
 get('case-file')?.addEventListener('change',async event=>{
  const file=(event.target as HTMLInputElement).files?.[0];if(!file)return;const revision=++caseRevision;

@@ -7,12 +7,14 @@ const upload=(object,name='case.json')=>({name,mimeType:'application/json',buffe
 test.beforeEach(async({page})=>{
  await page.addInitScript(()=>sessionStorage.setItem('veylens-splash-seen','1'));
 });
-test('real testnet case imports, downloads and independently replays under browser CSP',async({page})=>{
+test('real testnet case imports, downloads and independently replays under browser CSP',async({page},testInfo)=>{
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto('/workspace.html');await expect(page.locator('#flow-input')).toHaveValue('');
  await page.locator('#case-file').setInputFiles(upload(vulnerable));
  await expect(page.locator('#r-verdict')).toContainText('High risk');
  await expect(page.locator('#r-signed')).not.toHaveValue('');
+ await expect(page.locator('#review-empty')).toBeHidden();
+ await page.screenshot({path:testInfo.outputPath('workspace-report.png'),fullPage:true});
  const signed=await page.locator('#r-signed').inputValue();
  const reportDownload=page.waitForEvent('download');await page.locator('#download-signed').click();expect((await reportDownload).suggestedFilename()).toContain('signed-report.json');
  const sourceDownload=page.waitForEvent('download');await page.locator('#download-source').click();expect((await sourceDownload).suggestedFilename()).toBe('veylens-case-evidence.json');
@@ -33,4 +35,20 @@ test('failed collection preserves the empty case and requires disclosure consent
  let calls=0;await page.route('**/api/zcash-transaction',async route=>{calls++;await route.fulfill({status:400,json:{error:'Source unavailable.'}});});
  await page.goto('/workspace.html');await page.locator('#lookup-id').fill(vulnerable.refundTxid);await page.locator('#collect').click();expect(calls).toBe(0);
  await page.locator('#lookup-consent').check();await page.locator('#collect').click();await expect(page.locator('#intake-status')).toContainText('Source unavailable');expect(calls).toBe(1);await expect(page.locator('#flow-input')).toHaveValue('');
+});
+
+test('visual identity and navigation work across overview and investigation pages',async({page},testInfo)=>{
+ for(const name of ['index','workspace','verify','methodology']){
+  await page.goto('/'+name+'.html');
+  const logo=page.locator('.brand-symbol:visible').first();await expect(logo).toBeVisible();
+  await expect.poll(()=>logo.evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
+  await expect(page.locator('h1')).toHaveCount(1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await page.screenshot({path:testInfo.outputPath(name+'.png'),fullPage:true,animations:'disabled'});
+ }
+ await page.goto('/workspace.html');
+ if(await page.locator('.mobile-menu').isVisible()){
+  await page.locator('.mobile-menu summary').click();await page.locator('.mobile-menu').getByRole('link',{name:'Verify report'}).click();
+ }else await page.getByRole('navigation',{name:'Primary'}).getByRole('link',{name:'Verify report'}).click();
+ await expect(page).toHaveURL(/verify.html$/);
 });

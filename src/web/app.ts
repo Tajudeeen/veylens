@@ -181,6 +181,7 @@ function render(report: Report, flow: Flow | null, signed: SignedReport | null):
 
   const results = byId("results");
   results.hidden = false;
+  const empty=document.getElementById("review-empty");if(empty)empty.hidden=true;
   results.focus({ preventScroll: true });
   const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
   results.scrollIntoView?.({ behavior: reduced ? "auto" : "smooth", block: "start" });
@@ -190,7 +191,7 @@ let inputRevision = 0;
 export async function runAuditFromInput(): Promise<void> {
   const revision = inputRevision;
   clearError();
-  byId("results").hidden = true;
+  byId("results").hidden = true; const empty=document.getElementById("review-empty");if(empty)empty.hidden=false;
   const text = byId<HTMLTextAreaElement>("flow-input").value.trim();
   if (text === "") return showError("Paste a flow first, or load one of the examples.");
   if (text.length > MAX_INPUT_CHARS) return showError("That input is too large. Flows over 2 MB aren't supported here.");
@@ -227,7 +228,7 @@ export function loadInput(raw: unknown, run = false): void {
   inputRevision++;
   byId<HTMLTextAreaElement>("flow-input").value = JSON.stringify(raw, null, 2);
   clearError();
-  byId("results").hidden = true;
+  byId("results").hidden = true; const empty=document.getElementById("review-empty");if(empty)empty.hidden=false;
   if (run) void runAuditFromInput();
 }
 
@@ -269,7 +270,7 @@ function initApp(): void {
   };
 
   run.addEventListener("click", () => void runGuarded());
-  input.addEventListener("input", () => { inputRevision++; byId("results").hidden = true; clearError(); });
+  input.addEventListener("input", () => { inputRevision++; byId("results").hidden = true; const empty=document.getElementById("review-empty");if(empty)empty.hidden=false; clearError(); });
   byId("wrap-node")?.addEventListener("click", () => {
     try {
       const network = (byId("zcash-network") as HTMLSelectElement).value;
@@ -277,7 +278,7 @@ function initApp(): void {
       if (input.value.length > MAX_INPUT_CHARS) return showError("Input exceeds 2 MB.");
       const wrapped = wrapNodeTransaction(JSON.parse(input.value), network);
       inputRevision++; input.value = JSON.stringify(wrapped, null, 2);
-      clearError(); byId("results").hidden = true;
+      clearError(); byId("results").hidden = true; const empty=document.getElementById("review-empty");if(empty)empty.hidden=false;
     } catch (e) { showError(e instanceof Error ? e.message : "Could not import node JSON."); }
   });
   byId<HTMLInputElement>("file-input").addEventListener("change", (ev) => {
