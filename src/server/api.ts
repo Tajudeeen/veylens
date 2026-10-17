@@ -1,11 +1,12 @@
 import {signCollection,type CollectionReceipt} from '../collection.js';
 import {boundedJson} from './http.js';
+import {collectTestnetExplorer} from './testnetExplorer.js';
 import {collectTestnet} from './lightwallet.js';
 import {nodeRpc,collectInclusion,type NodeConnection} from './node.js';
 import {decodeZcashTransaction,type ZcashNetwork} from '../zcash.js';
 export interface CollectorEnv {
  COLLECTOR_SIGNING_KEY?:string; ONECLICK_API_KEY?:string; ZEBRA_RPC_URL?:string; ZEBRA_RPC_AUTH?:string; ZEBRA_NETWORK?:string;
- ZCASH_MAINNET_RPC_URL?:string; ZCASH_MAINNET_RPC_AUTH?:string; ZCASH_TESTNET_RPC_URL?:string; ZCASH_TESTNET_RPC_AUTH?:string;
+ TESTNET_SOURCE?:string; ZCASH_MAINNET_RPC_URL?:string; ZCASH_MAINNET_RPC_AUTH?:string; ZCASH_TESTNET_RPC_URL?:string; ZCASH_TESTNET_RPC_AUTH?:string;
 }
 const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const obj=(x:unknown):x is Record<string,unknown>=>!!x&&typeof x==='object'&&!Array.isArray(x);
@@ -21,7 +22,7 @@ export async function handleApi(request:Request,env:CollectorEnv,transport:typeo
  if(url.pathname==='/api/capabilities'){
   if(request.method!=='GET')return reply({error:'GET required.'},405);
   return reply({version:'1.0.0',zcashMainnet:true,zcashTestnet:true,source:env.ZEBRA_RPC_URL?'configured-node':'public-sources',oneclickStatus:true,
-   collectorSigning:!!env.COLLECTOR_SIGNING_KEY,sources:{mainnet:nodeFor(env,'mainnet')?'configured-node':'public-explorer',testnet:nodeFor(env,'testnet')?'configured-node':'testnet.zec.rocks'},
+   collectorSigning:!!env.COLLECTOR_SIGNING_KEY,sources:{mainnet:nodeFor(env,'mainnet')?'configured-node':'public-explorer',testnet:nodeFor(env,'testnet')?'configured-node':env.TESTNET_SOURCE==='lightwallet'?'testnet.zec.rocks':'api.testnet.zecblock.com'},
    blockInclusion:{mainnet:!!nodeFor(env,'mainnet'),testnet:!!nodeFor(env,'testnet')},walletEvidence:'local-export-only'});
  }
  if(request.method!=='POST')return reply({error:'POST required.'},405);
@@ -47,8 +48,8 @@ export async function handleApi(request:Request,env:CollectorEnv,transport:typeo
     const result=await nodeRpc(node,'getrawtransaction',[normalized,0],transport,signal);
     if(typeof result!=='string')throw new Error('Node returned no raw transaction.');data={txid:normalized,hex:result};source='configured-node';
    }else if(network==='testnet'){
-    const result=await collectTestnet(normalized,transport,signal);source='testnet-lightwallet';
-    return reply({...result,...(env.COLLECTOR_SIGNING_KEY?{receipt:await signCollection(result.data,source,binding,env.COLLECTOR_SIGNING_KEY),observationReceipt:await signCollection(result.observation,'testnet-lightwallet-observation',binding,env.COLLECTOR_SIGNING_KEY)}:{})});
+    const lightwallet=env.TESTNET_SOURCE==='lightwallet';const result=await (lightwallet?collectTestnet:collectTestnetExplorer)(normalized,transport,signal);source=lightwallet?'testnet-lightwallet':'testnet-explorer';
+    return reply({...result,...(env.COLLECTOR_SIGNING_KEY?{receipt:await signCollection(result.data,source,binding,env.COLLECTOR_SIGNING_KEY),observationReceipt:await signCollection(result.observation,lightwallet?'testnet-lightwallet-observation':'testnet-explorer-observation',binding,env.COLLECTOR_SIGNING_KEY)}:{})});
    }else{
     // Legacy single-network configuration remains strict. Explicit per-network URLs allow both nodes.
     if(env.ZEBRA_RPC_URL&&!env.ZCASH_MAINNET_RPC_URL)throw new Error('Choose the configured node network.');

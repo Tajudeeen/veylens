@@ -22,12 +22,12 @@ See [the source observations and reproduction limits](11-testnet-refund-regressi
 
 ## Collect the actual testnet records live
 
-1. Use Check collection services. Confirm version 1.0.0 and the public testnet source.
+1. Use Check collection services. Confirm version 1.0.0 and the public testnet explorer.
 2. Select Zcash transaction and Testnet.
 3. Enter the real refund ID `feb687889c0b613156f301e4a7c66ff60ef06b78ed4437594b65680d74e99007`.
 4. Confirm identifier disclosure and collect. Inspect ID-matched raw bytes and the
-   separately authenticated lightwallet observation, including its reported height.
-5. Download source and report and replay them. Compact-block membership is a
+   separately authenticated explorer observation, including its reported height.
+5. Download source and report and replay them. The reported canonical status is a
    source observation. It does not become a Merkle or consensus proof.
 6. To inspect reuse, import the complete committed case with shielding prevouts,
    or enter its shielding transaction and collect the required source records.

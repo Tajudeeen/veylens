@@ -3,7 +3,7 @@ import {reviewZcashEvidence} from './zcashEvidence.js';
 import {decodeZcashTransaction,type ZcashNetwork,type DecodedZcash} from './zcash.js';
 import {inspectReceiver} from './receivers.js';
 import {verifyBlockInclusion} from './chain.js';
-import {inspectLightwalletObservation} from './observations.js';
+import {inspectLightwalletObservation,inspectExplorerObservation} from './observations.js';
 import {inspectWalletExport} from './wallet.js';
 import {verifyCollection} from './collection.js';
 const obj=(x:unknown):x is Record<string,unknown>=>!!x&&typeof x==='object'&&!Array.isArray(x);
@@ -56,7 +56,7 @@ export async function reviewCase(raw:unknown,now=Math.floor(Date.now()/1000)):Pr
  let collectedProvider=false;
  if(raw['providerReceipt']!==undefined){const lookup=raw['providerLookup'];if(!obj(lookup)||typeof lookup['depositAddress']!=='string'||typeof lookup['memo']!=='string'||!await verifyCollection(raw['provider'],raw['providerReceipt'],'oneclick-status',{depositAddress:lookup['depositAddress'],memo:lookup['memo']}))return {ok:false,errors:['Provider collection receipt is invalid or bound to different data.']};if(request?.['dry']===false){const values=quote&&obj(quote['quote'])?quote['quote']:undefined;if(values?.['depositAddress']!==lookup['depositAddress']||String(values?.['depositMemo']??'')!==lookup['memo'])return {ok:false,errors:['Provider status lookup conflicts with the signed quote deposit address or memo.']};}collectedProvider=true;}
  let collected=0;
- for(const row of records.values())if(row.receipt!==undefined){if(!obj(row.receipt))return {ok:false,errors:['Transaction collection receipt is invalid.']};const source=row.receipt['source'];if(source!=='zcash-explorer'&&source!=='configured-node'&&source!=='testnet-lightwallet')return {ok:false,errors:['Unsupported transaction collection source.']};if(source==='testnet-lightwallet'&&network!=='testnet')return {ok:false,errors:['Lightwallet source requires testnet.']};if(!await verifyCollection({txid:row.txid,hex:row.hex},row.receipt,source,{txid:row.txid,network}))return {ok:false,errors:['Transaction collection receipt is invalid.']};collected++;}
+ for(const row of records.values())if(row.receipt!==undefined){if(!obj(row.receipt))return {ok:false,errors:['Transaction collection receipt is invalid.']};const source=row.receipt['source'];if(source!=='zcash-explorer'&&source!=='configured-node'&&source!=='testnet-lightwallet'&&source!=='testnet-explorer')return {ok:false,errors:['Unsupported transaction collection source.']};if((source==='testnet-lightwallet'||source==='testnet-explorer')&&network!=='testnet')return {ok:false,errors:['Lightwallet source requires testnet.']};if(!await verifyCollection({txid:row.txid,hex:row.hex},row.receipt,source,{txid:row.txid,network}))return {ok:false,errors:['Transaction collection receipt is invalid.']};collected++;}
  let inclusionCount=0,authenticatedInclusions=0,sourceObservations=0;
  try{for(const row of records.values()){
   const binding={txid:row.txid,network};
@@ -64,9 +64,9 @@ export async function reviewCase(raw:unknown,now=Math.floor(Date.now()/1000)):Pr
    if(row.chainReceipt!==undefined){if(!await verifyCollection(row.chainProof,row.chainReceipt,'configured-node-inclusion',binding))throw new Error('Invalid block inclusion collection receipt.');authenticated=true;authenticatedInclusions++;}
    evidence.facts.push({path:`chain.${row.txid}`,value:`Block ${checked.blockHash}, height ${checked.height}, ${checked.confirmations} source-reported confirmations`,trust:authenticated?'merkle-path-and-header-verified; pinned-collector-node-observation':'merkle-path-and-header-verified; unverified-chain-observation'});
   }else if(row.chainReceipt!==undefined)throw new Error('Block inclusion receipt has no proof.');
-  if(row.observation!==undefined){const checked=inspectLightwalletObservation(row.observation,row.txid,network);let authenticated=false;
-   if(row.observationReceipt!==undefined){if(!await verifyCollection(row.observation,row.observationReceipt,'testnet-lightwallet-observation',binding))throw new Error('Invalid lightwallet observation receipt.');authenticated=true;}
-   sourceObservations++;evidence.facts.push({path:`observation.${row.txid}`,value:checked.height?`Source compact-block observation at ${checked.height}, ${checked.confirmations} reported confirmations`:'Source reports this transaction in the mempool',trust:authenticated?'pinned-collector-signature; source-membership-observation':'unverified-source-observation'});
+  if(row.observation!==undefined){const explorer=obj(row.observation)&&row.observation['format']==='veylens-explorer-observation/1';const checked=(explorer?inspectExplorerObservation:inspectLightwalletObservation)(row.observation,row.txid,network);let authenticated=false;
+   if(row.observationReceipt!==undefined){if(!await verifyCollection(row.observation,row.observationReceipt,explorer?'testnet-explorer-observation':'testnet-lightwallet-observation',binding))throw new Error('Invalid lightwallet observation receipt.');authenticated=true;}
+   sourceObservations++;evidence.facts.push({path:`observation.${row.txid}`,value:checked.height?`${explorer?'Explorer':'Source compact-block'} observation at ${checked.height}, ${checked.confirmations} reported confirmations`:'Source reports this transaction in the mempool',trust:authenticated?'pinned-collector-signature; source-membership-observation':'unverified-source-observation'});
   }else if(row.observationReceipt!==undefined)throw new Error('Lightwallet observation receipt has no observation.');
  }}catch(e){return {ok:false,errors:[e instanceof Error?e.message:'Invalid chain evidence.']};}
  let walletCount=0;
@@ -87,7 +87,7 @@ export async function reviewCase(raw:unknown,now=Math.floor(Date.now()/1000)):Pr
  {path:'case.refundAssociation',value:association,trust:automatic&&refundId===automatic.txid?'provider-reported-plus-raw-output-match':'user-assertion-or-missing'},
  {path:'case.refundCandidates',value:String(candidates.length),trust:'exact-amount-and-address-comparison'},
  {path:'case.shieldingSource',value:raw['shieldingTxid']?String(raw['shieldingTxid']):'Not supplied',trust:'user-selected-role; source-prevouts-checked-locally'});
- evidence.facts.push({path:'case.chainEvidence',value:`${inclusionCount} Merkle proofs, ${authenticatedInclusions} authenticated node observations, ${sourceObservations} lightwallet observations`,trust:'separate-content-and-source-checks'},
+ evidence.facts.push({path:'case.chainEvidence',value:`${inclusionCount} Merkle proofs, ${authenticatedInclusions} authenticated node observations, ${sourceObservations} public source observations`,trust:'separate-content-and-source-checks'},
  {path:'case.walletEvidence',value:`${walletCount} transaction-bound wallet exports`,trust:'wallet-assertions-only'});
  if(refundId)evidence.facts.push({path:'case.refundTransaction',value:refundId,trust:association});
  evidence.gaps.push('Provider reporting and collector signatures do not prove provider honesty, canonical-chain inclusion or shared wallet ownership.');
@@ -101,7 +101,7 @@ export async function reviewCase(raw:unknown,now=Math.floor(Date.now()/1000)):Pr
  if(refundTo&&!transparent.length)evidence.gaps.push('Shielded refund delivery cannot be established from public transaction bytes alone.');
  for(const rule of new Set(report.findings.map(f=>f.ruleId))){const remedy=rule.includes('reuse')?'Use a fresh supported refund destination that is not a shielding source, and test the actual refund path.':rule.includes('transparent')?'Prefer an integration-supported shielded refund path. Verify actual delivery; an address encoding alone is insufficient.':'Resolve the authenticity or configuration issue before relying on this record.';evidence.facts.push({path:`remedy.${rule}`,value:remedy,trust:'engineering-recommendation'});}
  evidence.format='veylens-case-report/1';evidence.inputDigest=await digestInput(raw);evidence.gaps=[...new Set(evidence.gaps)];evidence.scope='Combined refund-path review: authenticated configuration, checked public relationships and explicit attribution boundaries';
- report.rulesetVersion='case-review/1.2.0';report.overallResult=report.findings.some(f=>f.severity==='high')?'fail':'insufficient';return {ok:true,report};
+ report.rulesetVersion='case-review/1.3.0';report.overallResult=report.findings.some(f=>f.severity==='high')?'fail':'insufficient';return {ok:true,report};
 }
 export function compareCaseReports(before:{findings:Array<{ruleId:string;severity:string}>;evidence?:{gaps:string[];facts:Array<{path:string;value:string}>;quoteSignature?:string}},after:{findings:Array<{ruleId:string;severity:string}>;evidence?:{gaps:string[];facts:Array<{path:string;value:string}>;quoteSignature?:string}}):{removed:string[];added:string[];remaining:string[];evidenceWarnings:string[];notice:string}{
  const a=new Set(before.findings.map(f=>f.ruleId)),b=new Set(after.findings.map(f=>f.ruleId));

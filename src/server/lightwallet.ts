@@ -31,7 +31,7 @@ export interface LightwalletObservation {
 export async function collectTestnet(txid:string,transport:typeof fetch,signal:AbortSignal):Promise<{data:{txid:string;hex:string};observation:LightwalletObservation}> {
   async function rpc(method:'GetLightdInfo'|'GetTransaction'|'GetBlock',payload:Uint8Array):Promise<Field[]>{
     const response=await transport(`https://testnet.zec.rocks/cash.z.wallet.sdk.rpc.CompactTxStreamer/${method}`,{method:'POST',headers:{'Content-Type':'application/grpc','TE':'trailers'},body:new Uint8Array(grpcFrame(payload)).buffer,signal,redirect:'manual'});
-    if(!response.headers.get('content-type')?.startsWith('application/grpc')||(response.headers.has('grpc-status')&&response.headers.get('grpc-status')!=='0'))throw new Error('Source rejected lightwallet request.');
+    if(!response.headers.get('content-type')?.startsWith('application/grpc')||(response.headers.has('grpc-status')&&response.headers.get('grpc-status')!=='0'))throw new Error(`Source rejected lightwallet request: HTTP ${response.status}, type ${response.headers.get('content-type')??'missing'}, gRPC ${response.headers.get('grpc-status')??'missing'}.`);
     return protoFields(unaryPayload(await boundedBytes(response,2_000_000)));
   }
   const info=await rpc('GetLightdInfo',new Uint8Array());if(text(info,4)!=='test')throw new Error('Source returned the wrong network.');

@@ -38,7 +38,7 @@ test('gRPC/protobuf rejects truncated, compressed, overflowing, duplicate and mu
  for(const raw of [new Uint8Array([0]),new Uint8Array([10,2,1]),new Uint8Array([8,...Array(11).fill(255)])])assert.throws(()=>protoFields(raw));
 });
 test('collector exposes real testnet capability without a node and rejects non-GET capability requests',async()=>{
- const caps=await (await handleApi(new Request('https://veylens.test/api/capabilities'),{})).json();assert.equal(caps.zcashTestnet,true);assert.equal(caps.sources.testnet,'testnet.zec.rocks');assert.equal(caps.blockInclusion.testnet,false);
+ const caps=await (await handleApi(new Request('https://veylens.test/api/capabilities'),{})).json();assert.equal(caps.zcashTestnet,true);assert.equal(caps.sources.testnet,'api.testnet.zecblock.com');assert.equal(caps.blockInclusion.testnet,false);
  const request=new Request('https://veylens.test/api/zcash-transaction',{method:'POST',headers:{Origin:'https://veylens.test','Content-Type':'application/json'},body:JSON.stringify({txid:data.txid,network:'testnet'})});
- const response=await handleApi(request,{},transportFor());assert.equal(response.status,200);assert.equal((await response.json()).data.hex,data.hex);
+ const response=await handleApi(request,{TESTNET_SOURCE:'lightwallet'},transportFor());assert.equal(response.status,200);assert.equal((await response.json()).data.hex,data.hex);
 });

@@ -2,12 +2,9 @@
 
 ## What changed
 
-Public testnet collection now uses bounded unary HTTPS calls to the official
-lightwallet protocol at testnet.zec.rocks. It checks the reported network, decodes
-raw transaction IDs, handles mempool and fork/lag states conservatively, and checks
-source compact-block membership. Exact raw records and observations receive
-separate collector receipts when the deployed signing secret is available. These
-are source observations, not consensus or Merkle proofs.
+Public testnet collection uses the network-specific HTTP API at api.testnet.zecblock.com. It validates explicit testnet metadata, raw transaction IDs, source-reported mined heights and canonical status. Exact raw records and observations receive separate collector receipts when the signing secret is available. These are source observations, not consensus or Merkle proofs.
+
+The bounded native lightwallet transport at testnet.zec.rocks is retained for the CLI or compatible environments with TESTNET_SOURCE=lightwallet. It checks the reported network and compact-block membership. Direct gRPC returned HTTP 404 from the hosted Worker despite working locally, so the deployed default uses the HTTP-native explorer. No fixture fallback is used.
 
 A case transaction can additionally carry chainProof and chainReceipt. The proof
 uses format veylens-block-inclusion/1, explicit network and txid, headerHex,
@@ -55,9 +52,8 @@ for the executable regression, and none is performed by the capture helper.
 
 ## Replay and comparisons
 
-case-review/1.2.0 preserves transaction authorization fingerprints and checks new
-proof, observation and wallet attachments. case-review/1.1.0 source replay dispatches
-to the frozen v0.9 implementation so existing exports are not silently invalidated.
+case-review/1.3.0 preserves transaction authorization fingerprints and checks new
+proof, observation and wallet attachments. case-review/1.1.0 and case-review/1.2.0 source replay dispatch to frozen implementations so existing exports are not silently invalidated.
 Comparison warns about network changes, fewer raw records, fewer authenticated
 collector records and fewer Merkle proofs, in addition to new evidence gaps.
 A removed finding does not establish equal coverage or deployed remediation.
@@ -79,8 +75,8 @@ tampering rejection, comparison, consent, failure handling and viewport overflow
 Its loopback server serves the exact Worker bundle and has no runtime credentials.
 No live provider calls run in the browser CI tests.
 
-Actual browser QA in this managed workspace is unavailable because the required
-control-browser skill is not installed. Do not confuse simulated-DOM checks or
+Local browser QA in this managed workspace is unavailable because the required
+control-browser skill is not installed. Desktop and mobile browser execution passed in GitHub Actions run 39007112939 on 17 October 2026, after correcting a test assertion that assumed the order of two removed findings. Do not confuse simulated-DOM checks or
 browser-test discovery with browser execution. Record GitHub's actual run result
 separately. Physical-device QA remains outstanding.
 

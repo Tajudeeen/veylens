@@ -24,12 +24,12 @@ when an upstream request fails.
 | Refund attribution | Requires a signed non-dry quote, terminal REFUNDED status, origin hash membership, exact aggregate amount and receiver match for an automatic transparent candidate |
 | Transaction decoding | Historical v4/v5 and NU6.3/NU7 v6, including Ironwood, with effect IDs and authorization fingerprints |
 | Public relationship | Follows supplied transparent prevouts to identify a shielding source reused by a declared refund |
-| Live collection | Mainnet explorer; public Testnet lightwallet service; optional separate mainnet/testnet full nodes |
+| Live collection | Mainnet explorer; public Testnet explorer; optional separate mainnet/testnet full nodes |
 | Source authentication | Pinned-key Ed25519 receipts authenticate exact collected bytes and source observations |
 | Block inclusion | Portable transaction Merkle path and serialized block-header hash checks; optional full-node collection |
 | Wallet context | Transaction-bound local wallet exports, including Ironwood; attachment excludes memos, keys and arbitrary wallet fields |
 | Export and replay | Signed report, original source, independent re-analysis, before/after comparison and redacted summary |
-| Compatibility | Existing case-review/1.1.0 reports replay through a frozen v0.9 implementation |
+| Compatibility | Existing case-review/1.1.0 and 1.2.0 reports replay through frozen implementations |
 
 A Merkle path proves membership in a supplied header. A collector receipt proves
 what the collector observed. Neither establishes independent chain consensus,
@@ -76,7 +76,7 @@ Its refund roles are operator assignments.
 4. Import the vulnerable case as a baseline and the corrected case as current.
 5. Compare. Reuse disappears, while the corrected result remains insufficient.
 
-To re-fetch actual records read-only, including fresh lightwallet observations:
+To re-fetch actual records read-only, including fresh signed or unsigned source observations:
 
 ```sh
 npm run capture:case -- \
@@ -101,10 +101,11 @@ local imports and replay but cannot supply the collector API.
 | ONECLICK_API_KEY | Optional server-only provider bearer credential |
 | ZCASH_MAINNET_RPC_URL / ZCASH_MAINNET_RPC_AUTH | Optional mainnet full node and authorization |
 | ZCASH_TESTNET_RPC_URL / ZCASH_TESTNET_RPC_AUTH | Optional testnet full node and authorization |
+| TESTNET_SOURCE | Optional `lightwallet` transport for environments with working gRPC egress; default is the HTTP explorer |
 | ZEBRA_RPC_URL / ZEBRA_RPC_AUTH / ZEBRA_NETWORK | Legacy single-node configuration; network is mandatory |
 
 No keys or secrets belong in source, browser input, evidence exports or logs.
-Without a node, testnet uses `testnet.zec.rocks` and mainnet uses ZecBlock.
+Without a node, testnet uses `api.testnet.zecblock.com` and mainnet uses ZecBlock.
 Full-node inclusion collection requires getrawtransaction, getblock,
 getblockheader, getblockchaininfo and getblockhash. These are fixed read-only
 methods. Users cannot supply a URL or arbitrary RPC method.
