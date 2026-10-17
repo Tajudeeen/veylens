@@ -25,7 +25,7 @@ test('baseline comparison removes reuse while preserving insufficient evidence a
  await page.goto('/workspace.html');await page.getByText('Compare a corrected integration',{exact:true}).click();await page.locator('#baseline-file').setInputFiles(upload(vulnerable));await expect(page.locator('#comparison-result')).toContainText('Baseline validated');
  await page.locator('#case-file').setInputFiles(upload(corrected));await expect(page.locator('#r-signed')).not.toHaveValue('');
  const report=JSON.parse(await page.locator('#r-signed').inputValue());expect(report.report.overallResult).toBe('insufficient');
- await page.locator('#compare-cases').click();await expect(page.locator('#comparison-result')).toContainText('Removed: public-source-address-reuse');
+ await page.locator('#compare-cases').click();await expect(page.locator('#comparison-result')).toContainText(/Removed: [^.]*public-source-address-reuse-in-supplied-transactions\./);
  await expect(page.locator('#comparison-result')).toContainText('do not establish privacy');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
