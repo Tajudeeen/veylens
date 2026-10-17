@@ -5,6 +5,7 @@ const vulnerable=JSON.parse(readFileSync(folder+'vulnerable.case.json','utf8'));
 const corrected=JSON.parse(readFileSync(folder+'corrected.case.json','utf8'));
 const upload=(object,name='case.json')=>({name,mimeType:'application/json',buffer:Buffer.from(JSON.stringify(object))});
 test.beforeEach(async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
  await page.addInitScript(()=>sessionStorage.setItem('veylens-splash-seen','1'));
 });
 test('real testnet case imports, downloads and independently replays under browser CSP',async({page},testInfo)=>{
@@ -14,7 +15,9 @@ test('real testnet case imports, downloads and independently replays under brows
  await expect(page.locator('#r-verdict')).toContainText('High risk');
  await expect(page.locator('#r-signed')).not.toHaveValue('');
  await expect(page.locator('#review-empty')).toBeHidden();
- await page.screenshot({path:testInfo.outputPath('workspace-report.png'),fullPage:true});
+ expect(await page.locator('#case-checkpoints>p').evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth+1))).toBe(true);
+ await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+ await page.screenshot({path:testInfo.outputPath('workspace-report.png'),fullPage:true,animations:'disabled'});
  const signed=await page.locator('#r-signed').inputValue();
  const reportDownload=page.waitForEvent('download');await page.locator('#download-signed').click();expect((await reportDownload).suggestedFilename()).toContain('signed-report.json');
  const sourceDownload=page.waitForEvent('download');await page.locator('#download-source').click();expect((await sourceDownload).suggestedFilename()).toBe('veylens-case-evidence.json');
