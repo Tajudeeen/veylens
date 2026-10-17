@@ -38,7 +38,7 @@ test('failed collection preserves the empty case and requires disclosure consent
 });
 
 test('visual identity and navigation work across overview and investigation pages',async({page},testInfo)=>{
- for(const name of ['index','workspace','verify','methodology']){
+ for(const name of ['index','workspace','verify','methodology','demo']){
   await page.goto('/'+name+'.html');
   const logo=page.locator('.brand-symbol:visible').first();await expect(logo).toBeVisible();
   await expect.poll(()=>logo.evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
@@ -46,7 +46,9 @@ test('visual identity and navigation work across overview and investigation page
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   await page.screenshot({path:testInfo.outputPath(name+'.png'),fullPage:true,animations:'disabled'});
  }
+ if(testInfo.project.name==='chromium')await page.setViewportSize({width:820,height:1180});
  await page.goto('/workspace.html');
+ await page.screenshot({path:testInfo.outputPath('navigation-viewport.png'),fullPage:true,animations:'disabled'});
  if(await page.locator('.mobile-menu').isVisible()){
   await page.locator('.mobile-menu summary').click();await page.locator('.mobile-menu').getByRole('link',{name:'Verify report'}).click();
  }else await page.getByRole('navigation',{name:'Primary'}).getByRole('link',{name:'Verify report'}).click();
