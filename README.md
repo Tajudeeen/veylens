@@ -65,12 +65,12 @@ verification record for what has actually run in each environment.
 
 ## Real public-testnet experiment
 
-The committed case files contain mined public-Testnet wallet transactions for
+The collector-vulnerable and collector-corrected case files include pinned-key receipts from the deployed collector. The committed case files contain mined public-Testnet wallet transactions for
 funding, shielding, a deliberately reused transparent refund address and a
 shielded comparison. The experiment does not execute Zashi or NEAR Intents.
 Its refund roles are operator assignments.
 
-1. Import `examples/testnet-refund/vulnerable.case.json` into the workspace.
+1. Import `examples/testnet-refund/collector-vulnerable.case.json` into the workspace.
 2. Inspect the high public-source-address-reuse finding and exact refund output.
 3. Download the signed report and source evidence. Replay both in Verify report.
 4. Import the vulnerable case as a baseline and the corrected case as current.

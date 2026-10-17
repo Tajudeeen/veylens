@@ -43,3 +43,16 @@ test('actual shielded comparison removes reuse while retaining delivery and cons
   assert.ok(refund.ironwoodActions>0);
   assert.equal((await checkSourceRecord(corrected,b.report)).valid,true);
 });
+
+test('deployed v1.0 testnet collector receipts authenticate the real vulnerable case and independent replay',async()=>{
+ const input=JSON.parse(readFileSync(folder+'collector-vulnerable.case.json','utf8'));const result=await reviewCase(input,1234);assert.ok(result.ok);assert.equal(result.report.overallResult,'fail');assert.equal((await checkSourceRecord(input,result.report)).valid,true);
+ assert.ok(result.report.evidence!.facts.some(f=>f.path==='case.rawRecords'&&f.value.includes('4 collector-authenticated')));
+ const changed=structuredClone(input);changed.transactions[0].observation.reportedHeight++;assert.equal((await reviewCase(changed)).ok,false);
+});
+
+test('deployed shielded comparison preserves authenticated coverage and removes reuse without certifying delivery',async()=>{
+ const a=JSON.parse(readFileSync(folder+'collector-vulnerable.case.json','utf8')),b=JSON.parse(readFileSync(folder+'collector-corrected.case.json','utf8'));
+ const before=await reviewCase(a,1234),after=await reviewCase(b,1234);assert.ok(before.ok&&after.ok);assert.equal(after.report.overallResult,'insufficient');assert.equal((await checkSourceRecord(b,after.report)).valid,true);
+ const comparison=compareCaseReports(before.report,after.report);assert.ok(comparison.removed.includes('public-source-address-reuse-in-supplied-transactions'));assert.ok(!comparison.evidenceWarnings.some(g=>g.includes('fewer collector-authenticated')));
+ assert.ok(after.report.evidence!.facts.some(f=>f.path==='case.rawRecords'&&f.value.includes('5 collector-authenticated')));
+});

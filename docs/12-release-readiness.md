@@ -97,3 +97,14 @@ and node capabilities without exposing secrets.
 - https://zcash.github.io/rpc/getblock.html
 - https://zcash.github.io/rpc/getblockheader.html
 - https://playwright.dev/docs/ci-intro
+
+## Verification recorded on 17 October 2026
+
+- Final local verification: all 206 tests passed, including the deployed collector specimens and shielded comparison.
+- GitHub Actions run [39007453917](https://github.com/Tajudeeen/veylens/actions/runs/39007453917): unit/integration tests, production build, submission checks and all six desktop/mobile browser checks passed on commit 4b941d202da2f25880bf66ed64b2125be0070d5b.
+- The private deployed Worker served version 1.0.0 with the HTTP-native public-testnet source and collector signing enabled.
+- All four vulnerable-case transactions were re-collected through the deployed API. Both the raw-record receipt and source-observation receipt for each transaction verified against the existing pinned key. The complete case independently replayed and reproduced the high reuse finding.
+- `examples/testnet-refund/collector-vulnerable.case.json` preserves those original responses and receipts. It contains public testnet data, no access token and no wallet key.
+- The runtime has no full node configured. Full-node proof collection therefore remains unavailable; portable proof import and its verification are implemented.
+
+- The shielded comparison was also re-collected, producing five authenticated transaction records. Its source replay succeeded, reuse was removed without losing authenticated coverage, and the result stayed insufficient. The deployed mainnet inspection endpoint also returned a valid pinned-key receipt for the historical reference transaction.
