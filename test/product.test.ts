@@ -47,3 +47,11 @@ test('guided case import reaches public reuse finding, remedies and independent 
  const fixed=controlledCase(true);Object.defineProperty(doc.getElementById('baseline-file'),'files',{value:[file],configurable:true});doc.getElementById('baseline-file')!.dispatchEvent(new dom.window.Event('change'));await new Promise(r=>setTimeout(r,30));
  Object.defineProperty(doc.getElementById('case-file'),'files',{value:[{size:20000,text:async()=>JSON.stringify(fixed)}],configurable:true});doc.getElementById('case-file')!.dispatchEvent(new dom.window.Event('change'));await new Promise(r=>setTimeout(r,50));(doc.getElementById('compare-cases') as HTMLButtonElement).click();await new Promise(r=>setTimeout(r,50));assert.match(doc.getElementById('comparison-result')!.textContent!,/Removed: public-source-address-reuse/);assert.match(doc.getElementById('comparison-result')!.textContent!,/do not establish privacy/);dom.window.close();
 });
+
+test('wallet attachment excludes secrets and remains bound to the imported real transaction',async()=>{
+ const input=JSON.parse(readFileSync('examples/testnet-refund/corrected.case.json','utf8'));const dom=load(async()=>Response.json({}));const doc=dom.window.document;
+ async function upload(id:string,raw:unknown){const text=JSON.stringify(raw);Object.defineProperty(doc.getElementById(id),'files',{value:[{size:text.length,text:async()=>text}],configurable:true});doc.getElementById(id)!.dispatchEvent(new dom.window.Event('change'));await new Promise(resolve=>setTimeout(resolve,100));}
+ await upload('case-file',input);await upload('wallet-file',{txid:input.refundTxid,spends:[],outputs:[{pool:'ironwood',address:'private-address',memo:'never-include-memo'}],seed:'never-include-seed'});
+ const source=JSON.parse((doc.getElementById('flow-input') as HTMLTextAreaElement).value);assert.equal(source.walletEvidence[0].txid,input.refundTxid);assert.ok(!JSON.stringify(source).includes('never-include'));
+ assert.match(doc.getElementById('intake-status')!.textContent!,/Ownership and delivery remain unverified/);dom.window.close();
+});

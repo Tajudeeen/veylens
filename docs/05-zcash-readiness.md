@@ -1,3 +1,5 @@
+> Historical implementation document. See [the current v1.0 contract](12-release-readiness.md) for current capabilities, evidence boundaries and remaining work.
+
 # Zcash integration and submission readiness
 
 ## Verified source facts

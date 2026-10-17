@@ -1,4 +1,4 @@
-# Veylens judge walkthrough, v0.9
+# Veylens judge walkthrough, v1.0
 
 The production workspace contains no sample loaders. Examples are isolated on
 `/demo.html`. Arrange viewer access to the private publication before submission.
@@ -19,6 +19,20 @@ The production workspace contains no sample loaders. Examples are isolated on
 These are mined public-testnet wallet transactions. The experiment's refund roles
 are operator assertions, and it does not execute Zashi or NEAR Intents.
 See [the source observations and reproduction limits](11-testnet-refund-regression.md).
+
+## Collect the actual testnet records live
+
+1. Use Check collection services. Confirm version 1.0.0 and the public testnet source.
+2. Select Zcash transaction and Testnet.
+3. Enter the real refund ID `feb687889c0b613156f301e4a7c66ff60ef06b78ed4437594b65680d74e99007`.
+4. Confirm identifier disclosure and collect. Inspect ID-matched raw bytes and the
+   separately authenticated lightwallet observation, including its reported height.
+5. Download source and report and replay them. Compact-block membership is a
+   source observation. It does not become a Merkle or consensus proof.
+6. To inspect reuse, import the complete committed case with shielding prevouts,
+   or enter its shielding transaction and collect the required source records.
+7. Optional full-node inclusion proofs require a configured node. Alternatively,
+   attach an imported portable proof after its matching transaction.
 
 ## Actual mainnet collection and authenticated replay
 
@@ -43,7 +57,7 @@ See [the source observations and reproduction limits](11-testnet-refund-regressi
 3. For live status, Veylens collects provider-listed Zcash origin-chain hashes,
    selected transaction roles and their bounded previous outputs.
 4. Automatic refund candidates require a non-dry quote with a valid provider
-   signature, origin-hash membership, matching destination and exact aggregate
+   signature, terminal REFUNDED status, origin-hash membership, matching destination and exact aggregate
    refund amount. Ambiguous candidates remain unresolved. Provider reports are
    still weaker than consensus and wallet ownership evidence.
 5. Optional refund overrides remain user assertions. They never become

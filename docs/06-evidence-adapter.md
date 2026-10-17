@@ -1,3 +1,5 @@
+> Historical implementation document. See [the current v1.0 contract](12-release-readiness.md) for current capabilities, evidence boundaries and remaining work.
+
 # Evidence adapter, v0.5.0
 
 ## Supported input and trust boundaries

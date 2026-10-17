@@ -1,3 +1,5 @@
+> Historical implementation document. See [the current v1.0 contract](12-release-readiness.md) for current capabilities, evidence boundaries and remaining work.
+
 # Combined case contract, v0.8
 
 `veylens-case/1` contains explicit network, up to 20 raw transaction records, an

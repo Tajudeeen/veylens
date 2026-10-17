@@ -1,3 +1,5 @@
+> Historical implementation document. See [the current v1.0 contract](12-release-readiness.md) for current capabilities, evidence boundaries and remaining work.
+
 # Veylens 0.7: live collection and local inspection
 
 Production has no sample-data imports. `/demo.html` retains labelled reproducibility

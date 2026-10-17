@@ -1,334 +1,150 @@
 # Veylens
 
 Review Zcash integration refund paths using original provider records and raw
-transaction evidence. Find public-address reuse, inspect refund exposure, understand
-missing evidence, and export a report that others can independently replay.
+transaction evidence. Detect public address reuse, distinguish checked evidence
+from source assertions, and export reports that others can independently replay.
 
-- [Working environment](https://veylens-privacy-workspace.deeen-code.chatgpt.site/workspace.html), owner-private until viewer access is granted.
-- [Isolated examples](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html).
-- [Current judge walkthrough](docs/07-judge-walkthrough.md).
-- [Case and collector trust contract](docs/10-case-workflow.md).
-- [Real public-testnet refund regression](docs/11-testnet-refund-regression.md).
+- [Workspace](https://veylens-privacy-workspace.deeen-code.chatgpt.site/workspace.html)
+- [Isolated examples](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html)
+- [Judge walkthrough](docs/07-judge-walkthrough.md)
+- [Real public-testnet experiment](docs/11-testnet-refund-regression.md)
+- [Current evidence contract and release verification](docs/12-release-readiness.md)
 
-Version 0.9 adds NU6.3/NU7 v6 and Ironwood transaction evidence. A real public-testnet
-wallet regression now covers funding, shielding, transparent source-address reuse
-and a shielded comparison transaction. Download the original case files from
-[`examples/testnet-refund`](examples/testnet-refund) and import them into the workspace.
+The existing publication and repository are private. Arrange explicit reviewer
+access before relying on either link for submission. Examples contain public test
+transactions. The working workspace starts empty and never substitutes fixtures
+when an upstream request fails.
 
-The case workflow combines provider records, raw transactions and shielding prevouts into
-one case. Live observations receive pinned-key collector signatures. Provider
-refund candidates require exact amount, destination and hash matches. Case reports
-include actionable remedies, source export, independent replay and baseline
-comparison. Production starts empty and never substitutes examples for failures.
+## Current release: 1.0.0
 
-A collector receipt authenticates collection origin. Transaction IDs authenticate
-raw effects. Neither proves consensus, wallet ownership or complete privacy.
-The public-testnet regression is a controlled wallet experiment, with external
-source observations of mined transactions. A real Zashi/NEAR Intents refund has
-not been independently attributed. Structural fixtures remain labelled test material.
+| Capability | Implemented behavior |
+| --- | --- |
+| Combined case | Original 1Click records, up to 20 raw transactions, explicit network and transaction roles |
+| Provider authenticity | Official SDK 0.1.26 verifies covered quote fields against its pinned manager key |
+| Refund attribution | Requires a signed non-dry quote, terminal REFUNDED status, origin hash membership, exact aggregate amount and receiver match for an automatic transparent candidate |
+| Transaction decoding | Historical v4/v5 and NU6.3/NU7 v6, including Ironwood, with effect IDs and authorization fingerprints |
+| Public relationship | Follows supplied transparent prevouts to identify a shielding source reused by a declared refund |
+| Live collection | Mainnet explorer; public Testnet lightwallet service; optional separate mainnet/testnet full nodes |
+| Source authentication | Pinned-key Ed25519 receipts authenticate exact collected bytes and source observations |
+| Block inclusion | Portable transaction Merkle path and serialized block-header hash checks; optional full-node collection |
+| Wallet context | Transaction-bound local wallet exports, including Ironwood; attachment excludes memos, keys and arbitrary wallet fields |
+| Export and replay | Signed report, original source, independent re-analysis, before/after comparison and redacted summary |
+| Compatibility | Existing case-review/1.1.0 reports replay through a frozen v0.9 implementation |
 
-The sections below document earlier implementation history as well as CLI usage.
-Use the current walkthrough for the production interface.
+A Merkle path proves membership in a supplied header. A collector receipt proves
+what the collector observed. Neither establishes independent chain consensus,
+wallet ownership, provider honesty or complete privacy. Wallet exports remain
+assertions. Public shielded bytes do not identify the actual recipient.
 
+## Reproduce the build
 
-A privacy-leak auditor for Zcash shielded cross-chain transaction flows.
-
-Veylens reviews a supplied description of a Zcash cross-chain flow for
-four privacy risk patterns. It produces findings, an event timeline, and
-an optionally signed report. Signing establishes report integrity, not
-transaction authenticity or a guarantee of privacy.
-
-Version 0.6.0 separates the landing page, audit workspace, independent
-report verifier, and methodology into real HTML documents. The historical
-refund example is a reconstruction, not captured chain evidence.
-
-## What it checks
-
-| Rule | Severity | What it catches |
-|---|---|---|
-| `refund-address-reuse` | high | An unshielded refund repeats an address that previously funded a shield in the supplied flow. |
-| `unjustified-unshielded-hop` | medium | Value drops out of the shielded pool mid-flow with no declared reason, when it could plausibly have stayed shielded through to settlement. |
-| `timing-correlation` | medium | An intent and settlement fall inside a configurable time window. This is a heuristic signal, without proof of public observability or identification. |
-| `turnstile-exposure` | info | A supplied migration has its turnstile flag enabled. The tool does not independently decode the migration. |
-
-Full rationale for each rule, including the academic prior art on
-timing/amount fingerprinting attacks against Zcash, is in
-[`docs/01-ideation.md`](docs/01-ideation.md). Full data model and
-attestation design is in [`docs/02-architecture.md`](docs/02-architecture.md).
-
-## What it is not
-
-- Not a formal proof of privacy. It catches four named, documented leak
-  patterns, not every possible deanonymization vector. Every report it
-  produces says so explicitly.
-- Not a bridge, wallet, or custody system. It never holds funds, and
-  never needs network access - it audits a structured description of a
-  flow, not a live transaction.
-- Not a compliance/AML tool. Scope is privacy-leak detection, not
-  sanctions or Travel Rule screening - that's already a crowded,
-  separate category (see Omni-Compliance Guard, Agentic Compliance
-  Bridge on Chainlink CCIP).
-
-## Install
-
-```
-npm install
-npm test
-```
-
-151 tests. The official 1Click SDK is pinned at 0.1.26 for provider quote
-signature verification. The decoder also pins @noble/hashes 1.8.0 and @scure/base 1.2.6. The SDK adds cryptographic and HTTP dependencies, although
-the browser application performs no network operations. The lockfile records
-the resolved dependency tree. TypeScript, esbuild and jsdom are development tools.
-
-## Web app
+Node.js 24 is used in CI. Node.js 22 or newer is supported by the application.
 
 ```sh
 npm ci
 npm test
 npm run build:web
+npm run check:submission
 ```
 
-Serve the entire `dist/client` directory over HTTPS for deployment, or localhost
-for development. Each page is self-contained, but navigation requires keeping
-the files together.
+`npm test` runs unit, adversarial, real-transaction, source-replay and simulated-DOM
+checks. `check:submission` replays the actual public-testnet experiment, verifies
+signed reports and checks the generated pages. It does not certify complete
+external evidence or reviewer access.
 
-| File | Purpose |
+The GitHub workflow additionally installs Chromium and runs desktop and mobile
+viewport checks against the bundled Worker:
+
+```sh
+npx playwright install --with-deps chromium
+npm run test:browser
+```
+
+Mobile emulation does not replace physical-device testing. See the release
+verification record for what has actually run in each environment.
+
+## Real public-testnet experiment
+
+The committed case files contain mined public-Testnet wallet transactions for
+funding, shielding, a deliberately reused transparent refund address and a
+shielded comparison. The experiment does not execute Zashi or NEAR Intents.
+Its refund roles are operator assignments.
+
+1. Import `examples/testnet-refund/vulnerable.case.json` into the workspace.
+2. Inspect the high public-source-address-reuse finding and exact refund output.
+3. Download the signed report and source evidence. Replay both in Verify report.
+4. Import the vulnerable case as a baseline and the corrected case as current.
+5. Compare. Reuse disappears, while the corrected result remains insufficient.
+
+To re-fetch actual records read-only, including fresh lightwallet observations:
+
+```sh
+npm run capture:case -- \
+  --input examples/testnet-refund/vulnerable.case.json \
+  --out /tmp/veylens-fresh.capture.json
+```
+
+This discloses selected transaction IDs to the named source. It performs no wallet
+transaction, trade or deposit. Output creation is exclusive and never overwrites an
+existing file. For full-node inclusion proofs, configure the appropriate node and
+add `--inclusion`. Imported original provider records are retained; a supplied
+providerLookup can refresh the provider status. No provider input is invented.
+
+## Runtime configuration
+
+The Worker serves the client and same-origin API. Static-only hosting supports
+local imports and replay but cannot supply the collector API.
+
+| Runtime variable | Purpose |
 | --- | --- |
-| `index.html` | Landing page and skippable session splash |
-| `workspace.html` | Flow and 1Click import, signature checks, provenance, signed export |
-| `verify.html` | Independent hash and signature verification |
-| `methodology.html` | Rule scope, Zcash integration status, evidence limits |
-| `standalone.html` | Legacy single-file application retained for compatibility |
+| COLLECTOR_SIGNING_KEY | Existing pinned collector's PKCS8 Ed25519 key, as a runtime secret |
+| ONECLICK_API_KEY | Optional server-only provider bearer credential |
+| ZCASH_MAINNET_RPC_URL / ZCASH_MAINNET_RPC_AUTH | Optional mainnet full node and authorization |
+| ZCASH_TESTNET_RPC_URL / ZCASH_TESTNET_RPC_AUTH | Optional testnet full node and authorization |
+| ZEBRA_RPC_URL / ZEBRA_RPC_AUTH / ZEBRA_NETWORK | Legacy single-node configuration; network is mandatory |
 
-The landing CTA opens the workspace. The signed API example is a real dry
-quote with dummy addresses. The declared-reuse and alternative-route examples
-are illustrative, and clearly distinct from actual transaction evidence. `workspace.html?example=leak` and
-`workspace.html?example=clean` preload labelled fixtures without running an
-audit or placing private input in the URL. Changing input clears stale results.
+No keys or secrets belong in source, browser input, evidence exports or logs.
+Without a node, testnet uses `testnet.zec.rocks` and mainnet uses ZecBlock.
+Full-node inclusion collection requires getrawtransaction, getblock,
+getblockheader, getblockchaininfo and getblockhash. These are fixed read-only
+methods. Users cannot supply a URL or arbitrary RPC method.
 
-Analysis and verification run locally. Each document's CSP denies network
-access and pins its inline script by SHA-256. Ordinary page navigation reaches
-the hosting service. Signing and verification require WebCrypto Ed25519 support.
-If signing is unavailable, the audit still renders with an explanation.
+Use Check collection services in the workspace to inspect deployed capabilities.
+Live lookups require the disclosure checkbox. Local imports, wallet inspection,
+address inspection, analysis and verification stay in the browser. Full source
+exports may contain addresses, raw transactions and retained wallet context.
+Redacted summaries contain no identifiers and are explicitly non-proof summaries.
 
-Mobile navigation is available through a Menu disclosure. Inputs use 16px text,
-buttons have 44px or larger targets, and layouts include safe-area padding.
-Real device layout testing remains outstanding in this environment.
+## CLI
 
-See [`docs/04-web-app.md`](docs/04-web-app.md) and
-[`docs/05-zcash-readiness.md`](docs/05-zcash-readiness.md).
-
-## Usage
-
-Audit a flow:
-
-```
-npm run build
-node dist/src/cli.js audit path/to/flow.json
-```
-
-This prints a human-readable report, writes a signed JSON report next
-to the input file, and exits 1 for a high-severity risk, 3 for insufficient evidence,
-or 2 for invalid input. Missing evidence never returns a successful privacy pass.
-
-Verify a report independently, without re-running the audit:
-
-```
-node dist/src/cli.js verify path/to/flow.signed-report.json
-```
-
-Generate a persistent signing key instead of the default one-off key
-per run:
-
-```
+```sh
+node dist/src/cli.js audit case.json --json
+node dist/src/cli.js verify case.signed-report.json
+node dist/src/cli.js verify-input case.json case.signed-report.json
+node dist/src/cli.js audit case.json --html
 node dist/src/cli.js keygen ./keys
-node dist/src/cli.js audit flow.json --key ./keys/veylens-private.pem
 ```
 
-Machine-readable output:
+Use the report filename printed by audit. Exit 1 indicates a high finding, 3
+indicates insufficient evidence and 2 indicates invalid input. A clean comparison
+never becomes a privacy pass merely because a finding disappears.
 
-```
-node dist/src/cli.js audit flow.json --json
-```
+The legacy declared-Flow format retains four rules: refund-address-reuse,
+unjustified-unshielded-hop, timing-correlation and turnstile-exposure. These are
+pattern/heuristic checks on declared events. They are distinct from the combined
+case's raw-transaction checks.
 
-Standalone HTML report, next to the JSON:
+## Evidence still needed
 
-```
-node dist/src/cli.js audit flow.json --html
-node dist/src/cli.js report flow.signed-report.json --out report.html   # from an existing report
-```
+- An actual, attributed integration refund with original non-dry provider records.
+- Authenticated shielded delivery and ownership evidence, beyond wallet assertions.
+- Independent consensus validation beyond supplied headers and node observations.
+- Physical-device QA and explicit reviewer access.
 
-The HTML file is a single self-contained page. It loads nothing from the
-network, its Content-Security-Policy is pinned to the hash of its own
-inline script, and all flow data is HTML-escaped (flow files are
-untrusted input). A "Verify signature in this browser" button recomputes
-the report hash and checks the Ed25519 signature with the browser's own
-WebCrypto, so a reader can confirm a report without installing anything.
-Browsers without Ed25519 support get a message pointing to
-`veylens verify` instead.
-
-### Try the reconstructed examples
-
-```
-npm run audit:demo:leak   # the reconstructed Zashi CrossPay / ZachXBT flow - fails, high severity
-npm run audit:demo:clean  # illustrative corrected flow - insufficient evidence
-```
-
-The leak fixture is a reconstruction of the disclosed case, not a
-capture of live chain data. Two values come straight from ZachXBT's
-thread as reported (Cryptopolitan, Oct 21 2025): the 0.005 ETH CrossPay
-payout and the 0.001598 ZEC refund sent back to the original shielding
-address. The shielded amount (1 ZEC), the intent amount, the addresses,
-and the second-level timing offsets are illustrative, since his test
-started from 1 SOL bridged to ZEC and the exact on-chain figures aren't
-in the public write-ups I could verify. The clean fixture is the same
-shape with the fix ECC committed to applied (ephemeral address, shielded
-refund). Running both side by side shows the tool separating the two
-cases. Replacing the illustrative values with real transaction data is a
-good first step for anyone who wants to extend it.
-
-## Branding
-
-Veylens uses the Zcash palette throughout: Zcash black `#231F20` and
-Zcash yellow `#F4B728`.
-
-- Terminal output uses the yellow for the title, the result, and
-  high/medium findings. It turns itself off when output is piped, and
-  honors `NO_COLOR`. `FORCE_COLOR=1` forces it on.
-- The HTML report is black with yellow carrying the weight: a solid
-  yellow card for high-severity findings, a yellow outline for medium,
-  a quiet grey outline for info. Severity is always written out as text
-  too, never color alone.
-
-Only the palette is used. The Zcash logo is a trademarked mark and is
-not reproduced anywhere in this project, and no official brand
-typeface is claimed. Veylens is an unofficial tool and is not
-affiliated with or endorsed by the Zcash project or its trademark
-holders.
-
-## Flow format
-
-A `Flow` is an ordered list of typed events: `shield`, `unshield`,
-`intent_submit`, `settlement`, `refund`, `migrate`. See
-[`src/types.ts`](src/types.ts) for the full schema and
-[`test/fixtures/`](test/fixtures/) for worked examples.
-
-## Evidence importer
-
-Paste or open the original 1Click `QuoteResponse` or `GetExecutionStatusResponse`
-in the workspace. Native Zcash-origin records use `nep141:zec.omft.near`.
-Amounts remain integer strings. The importer does not invent transaction events
-from quote timestamps, estimated durations, or status update times.
-
-The official SDK verifies signed quote fields against its pinned manager key.
-Only covered fields receive `provider-signed` labels. The outer status, refund
-amount, and transaction hashes remain unverified provider reports. Optional
-shielding-source context is a user assertion. It never becomes wallet evidence.
-
-To supply that context, wrap the original provider record:
-
-```json
-{
-  "format": "veylens-evidence/1",
-  "provider": "Replace this string with the original quote or status object",
-  "context": { "shieldingSourceAddresses": ["your-declared-source-address"] }
-}
-```
-
-Reports include canonical input digests, provenance labels, missing evidence,
-and the analysis scope. All evidence metadata is covered by the report signature.
-Report verification checks integrity. Source verification additionally compares
-the original evidence digest and re-runs the supported analysis:
-
-```sh
-node dist/src/cli.js verify-input original-record.json report.signed-report.json
-```
-
-The separate browser verifier offers the same source check. A re-signed report
-with false provenance can pass integrity verification but fails source re-analysis.
-
-### Reproduce authentic provider input
-
-```sh
-npm run evidence:capture -- /tmp/fresh-quote.json
-node dist/src/cli.js audit /tmp/fresh-quote.json --json
-```
-
-The capture script uses public dummy inputs and `dry: true`, verifies the provider
-signature, rejects responses containing a deposit address, and executes no
-transaction. Availability of the external API can change. The archived signed
-quote in `test/fixtures/evidence/oneclick-live-dry-quote.json` works offline.
-A dry quote proves provider-authenticated configuration, not an on-chain refund.
-
-## Zcash raw transaction evidence
-
-The workspace's “Inspect mainnet transaction” example contains a historical
-mainnet v4 transaction fetched from ZecBlock. Its ID and exact public outputs
-are independently reproduced from raw bytes. It is not a known refund or leak.
-
-Paste a node `getrawtransaction` JSON export, choose its network in the advanced
-import section, and use Wrap node JSON. Alternatively import a bundle:
-
-```json
-{
-  "format": "veylens-zcash-evidence/1",
-  "network": "mainnet",
-  "transactions": [{ "txid": "64-character transaction ID", "hex": "raw transaction bytes" }]
-}
-```
-
-For reuse analysis, include the shielding transaction, its input previous-output
-transactions, and the declared refund transaction. Set `shieldingTxid`,
-`refundTxid`, and a checksum-valid transparent `refundTo`. The report checks
-public address relationships while preserving the unverified role/ownership
-boundary. An optional `provider` record associates quote configuration, without
-turning unsigned status or transaction attribution into authenticated evidence.
-
-Version 5 effect IDs exclude authorizing data. The separate `authDigestBytes`
-field can constrain its computed ZIP-244 fingerprint when a trusted reference
-is available. This does not validate spending signatures or shielded proofs.
-Unsupported formats fail explicitly. No v6 or Ironwood support is claimed.
-
-```sh
-npm run zcash:capture -- PUBLIC_MAINNET_TXID /tmp/transaction-evidence.json
-node dist/src/cli.js audit /tmp/transaction-evidence.json --json
-```
-
-Capture is read-only. The public explorer sees the requested transaction ID.
-The v0.6 importer is local. In v0.8, explicit live collection sends selected identifiers to the named source. See [`docs/08-zcash-evidence.md`](docs/08-zcash-evidence.md).
-
-## Status
-
-Intended for Zecathon Core and Tooling. The host brief and independently verified
-functionality should be reviewed together before submission.
-
-Implemented: quote/status import, pinned-key quote verification, conservative
-refund-configuration findings, provenance, incomplete-evidence outcomes,
-report integrity and independent source re-analysis.
-
-Implemented in v0.6.0: raw Zcash v4/v5 decoding, transaction effect IDs, ZIP-244
-authorization fingerprints, P2PKH/P2SH transparent address checks, previous-output
-relationships, and explicit-network node-export import.
-
-Remaining: independent canonical-chain anchoring, wallet ownership, a fully attributed real refund walkthrough, and real-browser/device QA. Receiver encoding inspection is implemented.
-No Zebra or librustzcash integration is claimed. The legacy Flow path retains
-its four rules but cannot produce a privacy pass without authentic evidence.
-A declared source match is a configuration risk, not proof of on-chain leakage.
-
-See [`docs/06-evidence-adapter.md`](docs/06-evidence-adapter.md) and
-[`docs/07-judge-walkthrough.md`](docs/07-judge-walkthrough.md).
+Veylens is an unofficial privacy debugging tool, not a wallet, bridge, AML product
+or privacy certification. Historical version documents are retained for provenance;
+the current release contract takes precedence.
 
 ## License
-MIT.
 
-### Working environment, v0.7
-
-The workspace now starts empty and collects real 1Click status or Zcash mainnet
-raw records through a bounded same-origin Worker. Examples live on `/demo.html`.
-It also inspects Unified Address receivers and z_viewtransaction exports locally.
-Risk findings and missing evidence appear separately. Full signed reports support
-source replay; a separate redacted summary omits sensitive identifiers.
-
-See [the collection and evidence contract](docs/09-working-product.md) for runtime
-configuration, source trust boundaries, unsupported cases and remaining milestones.
+MIT. See THIRD_PARTY_NOTICES.md for dependencies and upstream test material.

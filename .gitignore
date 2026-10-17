@@ -3,3 +3,6 @@ dist/
 *.log
 *.signed-report.json
 *.report.html
+playwright-report/
+test-results/
+*.capture.json

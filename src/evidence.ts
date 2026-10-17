@@ -1,3 +1,4 @@
+import {reviewCaseV1} from './legacy/case-v1.js';
 import {isCase,reviewCase} from './case.js';
 import { isZcashEvidence, reviewZcashEvidence } from "./zcashEvidence.js";
 import { verifyQuoteSignature, type QuoteResponse } from "@defuse-protocol/one-click-sdk-typescript";
@@ -131,7 +132,7 @@ export async function reviewProviderInput(raw: unknown, now = Math.floor(Date.no
 export async function checkSourceRecord(raw: unknown, report: Report): Promise<{ valid: boolean; reason: string }> {
   if (!report.evidence || await digestInput(raw) !== report.evidence.inputDigest) return { valid: false, reason: "Canonical input digest does not match this report." };
   if (isCase(raw)) {
-    const reviewed=await reviewCase(raw,report.generatedAt);
+    const reviewed=await (report.rulesetVersion==='case-review/1.1.0'?reviewCaseV1:reviewCase)(raw,report.generatedAt);
     return reviewed.ok&&stableJson(reviewed.report)===stableJson(report)?{valid:true,reason:"Case evidence, collection receipts and findings match source replay. Consensus and ownership remain outside scope."}:{valid:false,reason:"Case source replay does not match."};
   }
   if (isZcashEvidence(raw)) {

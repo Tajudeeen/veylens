@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {handleApi} from '../src/server/api.js';
+import {readFileSync} from 'node:fs';
 import {inspectWalletExport} from '../src/wallet.js';
 const req=(path:string,body:unknown,origin='https://veylens.test')=>new Request(`https://veylens.test${path}`,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(body)});
 test('collector rejects cross-origin and invalid IDs without upstream requests',async()=>{
@@ -9,9 +10,9 @@ test('collector rejects cross-origin and invalid IDs without upstream requests',
  assert.equal((await handleApi(req('/api/zcash-transaction',{txid:'https://internal',network:'mainnet'}),{},transport)).status,400);assert.equal(calls,0);
 });
 test('collector fixes explorer URL and returns real source bytes',async()=>{
- const id='a'.repeat(64);let target='';const transport:typeof fetch=async input=>{target=String(input);return Response.json({data:{hex:'010203'}});};
+ const row=JSON.parse(readFileSync('test/fixtures/zcash/mainnet-inspection.json','utf8')).transactions[0];const id=row.txid;let target='';const transport:typeof fetch=async input=>{target=String(input);return Response.json({data:{hex:row.hex}});};
  const response=await handleApi(req('/api/zcash-transaction',{txid:id,network:'mainnet',url:'http://internal'}),{},transport);
- assert.equal(response.status,200);assert.equal(target,`https://api.zecblock.com/v1/transactions/${id}/raw`);assert.deepEqual(await response.json(),{data:{txid:id,hex:'010203'}});
+ assert.equal(response.status,200);assert.equal(target,`https://api.zecblock.com/v1/transactions/${id}/raw`);assert.deepEqual(await response.json(),{data:{txid:id,hex:row.hex}});
 });
 test('collector source errors never return fixture data or secrets',async()=>{
  const transport:typeof fetch=async()=>{throw new Error('secret-token');};const response=await handleApi(req('/api/oneclick-status',{depositAddress:'deposit-address'}),{},transport);

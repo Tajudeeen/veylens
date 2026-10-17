@@ -165,7 +165,7 @@ function render(report: Report, flow: Flow | null, signed: SignedReport | null):
 
   const checkpoints=document.getElementById('case-checkpoints');
   if(checkpoints){const facts=report.evidence?.facts.filter(f=>f.path.startsWith('case.')||f.path.startsWith('remedy.'))??[];
-    const labels:Record<string,string>={providerOrigin:'Provider record',rawRecords:'Transaction evidence',refundReceiver:'Refund receivers',refundAssociation:'Refund association',refundCandidates:'Matching refund candidates',shieldingSource:'Selected shielding transaction',refundTransaction:'Selected refund transaction'};
+    const labels:Record<string,string>={providerOrigin:'Provider record',rawRecords:'Transaction evidence',refundReceiver:'Refund receivers',refundAssociation:'Refund association',refundCandidates:'Matching refund candidates',shieldingSource:'Selected shielding transaction',refundTransaction:'Selected refund transaction',chainEvidence:'Chain evidence',walletEvidence:'Wallet evidence'};
     checkpoints.replaceChildren(...(facts.length?[el('h3','sub','Case checkpoints and remedies'),...facts.map(f=>el('p',null,el('span',null,(labels[f.path.replace('case.','')]??f.path.replace('remedy.','Remedy for '))+': '),f.value,el('span','fine',' '+f.trust)))]:[]));}
   const attest = byId("r-attest");
   if (signed) {

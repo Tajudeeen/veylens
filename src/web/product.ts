@@ -1,18 +1,18 @@
 import {reviewCase,compareCaseReports} from '../case.js';
-import {inspectWalletExport} from '../wallet.js';
+import {inspectWalletExport,sanitizeWalletExport} from '../wallet.js';
 import {loadInput} from './app.js';
 import {inspectReceiver} from '../receivers.js';
 import {decodeZcashTransaction} from '../zcash.js';
 const get=(id:string)=>document.getElementById(id);
 const value=(id:string)=>(get(id) as HTMLInputElement).value.trim();
 const status=(text:string)=>{const out=get('intake-status');if(out)out.textContent=text;};
-type RecordRow={txid:string;hex:string;receipt?:unknown};
-type CaseDraft={format:'veylens-case/1';network:'mainnet'|'testnet';transactions:RecordRow[];provider?:unknown;providerReceipt?:unknown;providerLookup?:{depositAddress:string;memo:string};shieldingTxid?:string;refundTxid?:string;refundTo?:string};
+type RecordRow={txid:string;hex:string;receipt?:unknown;observation?:unknown;observationReceipt?:unknown;chainProof?:unknown;chainReceipt?:unknown};
+type CaseDraft={format:'veylens-case/1';network:'mainnet'|'testnet';transactions:RecordRow[];provider?:unknown;providerReceipt?:unknown;providerLookup?:{depositAddress:string;memo:string};shieldingTxid?:string;refundTxid?:string;refundTo?:string;walletEvidence?:Array<{network:'mainnet'|'testnet';txid:string;export:unknown}>};
 let caseRevision=0;
 let draft:CaseDraft={format:'veylens-case/1',network:'mainnet',transactions:[]};
-async function lookup(path:string,payload:unknown):Promise<{data:unknown;receipt?:unknown}>{
+async function lookup(path:string,payload:unknown):Promise<{data:unknown;receipt?:unknown;observation?:unknown;observationReceipt?:unknown}>{
  const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(20000)});
- const result=await response.json() as {data:unknown;receipt?:unknown;error?:string};
+ const result=await response.json() as {data:unknown;receipt?:unknown;observation?:unknown;observationReceipt?:unknown;error?:string};
  if(!response.ok)throw new Error(result.error??'Lookup failed.');return result;
 }
 function roles():void{
@@ -24,12 +24,14 @@ function showDraft(run=false):void{loadInput(draft,run);const summary=get('case-
 async function collectTx(txid:string,network:'mainnet'|'testnet'):Promise<RecordRow>{
  const result=await lookup('/api/zcash-transaction',{txid,network});const data=result.data as RecordRow;
  const decoded=decodeZcashTransaction(data.hex,network);if(decoded.txid!==txid.toLowerCase()||data.txid.toLowerCase()!==decoded.txid)throw new Error('Source transaction ID mismatch.');
- return {...data,...(result.receipt?{receipt:result.receipt}:{})};
+ const row:RecordRow={...data,...(result.receipt?{receipt:result.receipt}:{}),...(result.observation?{observation:result.observation}:{}),...(result.observationReceipt?{observationReceipt:result.observationReceipt}:{})};
+ if((get('lookup-inclusion') as HTMLInputElement).checked){const proof=await lookup('/api/zcash-inclusion',{txid,network});row.chainProof=proof.data;if(proof.receipt)row.chainReceipt=proof.receipt;}
+ return row;
 }
 get('collect')?.addEventListener('click',async()=>{
  const button=get('collect') as HTMLButtonElement;
  if(!(get('lookup-consent') as HTMLInputElement).checked)return status('Confirm the identifier disclosure before lookup.');
- const revision=++caseRevision;const busyIds=['clear-case','case-file','review-case','case-shielding','case-refund','lookup-network','intake-mode'];for(const id of busyIds){const control=get(id) as HTMLInputElement|null;if(control)control.disabled=true;}
+ const revision=++caseRevision;const busyIds=['clear-case','case-file','review-case','case-shielding','case-refund','lookup-network','intake-mode','lookup-inclusion','wallet-file'];for(const id of busyIds){const control=get(id) as HTMLInputElement|null;if(control)control.disabled=true;}
  button.disabled=true;status('Collecting source records…');
  try{
   const network=value('lookup-network')==='testnet'?'testnet':'mainnet';
@@ -61,6 +63,7 @@ get('case-file')?.addEventListener('change',async event=>{
   if(file.size>2_000_000)throw new Error('Case file exceeds 2 MB.');const raw=JSON.parse(await file.text()) as CaseDraft&{quoteRequest?:unknown;quoteResponse?:unknown};
   let candidate=structuredClone(draft);
   if(raw.format==='veylens-case/1')candidate=raw;
+  else if((raw as {format:string}).format==='veylens-block-inclusion/1'){const proof=raw as unknown as {txid:string;network:string};const row=candidate.transactions.find(r=>r.txid===proof.txid);if(!row||proof.network!==candidate.network)throw new Error('Import the matching transaction before its block inclusion proof.');row.chainProof=raw;delete row.chainReceipt;}
   else if(raw.quoteRequest||raw.quoteResponse){candidate.provider=raw;delete candidate.providerReceipt;delete candidate.providerLookup;}
   else if(Array.isArray(raw.transactions)&&['mainnet','testnet'].includes(raw.network)){
    if(candidate.network!==raw.network&&(candidate.transactions.length||candidate.provider))throw new Error('Imported network conflicts with this case.');candidate.network=raw.network;
@@ -101,4 +104,18 @@ get('baseline-file')?.addEventListener('change',async event=>{
 get('compare-cases')?.addEventListener('click',async()=>{
  const out=get('comparison-result');if(!out)return;
  try{if(!baseline)throw new Error('Import the original case evidence first.');roles();const before=await reviewCase(baseline),after=await reviewCase(draft);if(!before.ok||!after.ok)throw new Error('Both cases must contain valid evidence.');const comparison=compareCaseReports(before.report,after.report);out.textContent=`Removed: ${comparison.removed.join(', ')||'none'}. Added: ${comparison.added.join(', ')||'none'}. Remaining: ${comparison.remaining.join(', ')||'none'}. Evidence changes: ${comparison.evidenceWarnings.join(' ')||'No additional gaps identified.'} ${comparison.notice}`;}catch(e){out.textContent=e instanceof Error?e.message:'Comparison failed.';}
+});
+
+get('check-services')?.addEventListener('click',async()=>{
+ const out=get('service-status');if(!out)return;
+ try{const response=await fetch('/api/capabilities',{signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error('Service unavailable.');const info=await response.json() as {version?:string;collectorSigning?:boolean;sources?:{mainnet:string;testnet:string};blockInclusion?:{mainnet:boolean;testnet:boolean}};
+ out.textContent=`Collector ${info.version??'unknown'}. Mainnet: ${info.sources?.mainnet??'unknown'}. Testnet: ${info.sources?.testnet??'unknown'}. Signed observations: ${info.collectorSigning?'enabled':'unavailable'}. Full-node inclusion: mainnet ${info.blockInclusion?.mainnet?'available':'not configured'}, testnet ${info.blockInclusion?.testnet?'available':'not configured'}.`;
+ }catch{out.textContent='Service check failed. Local evidence import and replay remain available.';}
+});
+get('wallet-file')?.addEventListener('change',async event=>{
+ const file=(event.target as HTMLInputElement).files?.[0];if(!file)return;const revision=++caseRevision;
+ try{if(file.size>2_000_000)throw new Error('Wallet export exceeds 2 MB.');const record=sanitizeWalletExport(JSON.parse(await file.text()));const summary=inspectWalletExport(record);
+ const candidate=structuredClone(draft);candidate.walletEvidence=(candidate.walletEvidence??[]).filter(r=>r.txid!==summary.txid);candidate.walletEvidence.push({network:candidate.network,txid:summary.txid,export:record});
+ const result=await reviewCase(candidate);if(!result.ok)throw new Error(result.errors.join(' '));if(revision!==caseRevision)return;draft=candidate;showDraft(true);status('Wallet export attached locally to its transaction. Memos and keys were excluded. Ownership and delivery remain unverified.');
+ }catch(e){status(e instanceof Error?e.message:'Invalid wallet export.');}
 });
