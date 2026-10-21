@@ -19,3 +19,13 @@ test('unprotected collection fails closed and denied requests never reach upstre
  const denied=await handleApi(request.clone(),{},transport,async()=>new Response('Limited',{status:429,headers:{'Retry-After':'30'}}));assert.equal(denied.status,429);assert.equal(denied.headers.get('Retry-After'),'30');assert.equal(calls,0);
  const result=await limitCollection(request,{},1);assert.equal(result?.status,503);
 });
+
+test('production admission enforces client/global windows and fails closed on database errors',async()=>{
+ const {budgetDb}=await import('./helpers/budgetDb.js');const sql=new DatabaseSync(':memory:');sql.exec(readFileSync('drizzle/0000_slim_fixer.sql','utf8'));const env={DB:budgetDb(sql),COLLECTOR_RATE_SECRET:'test-only-random-looking-salt-value'};
+ const request=new Request('https://veylens.test/api/source-health',{headers:{'CF-Connecting-IP':'192.0.2.5'}});
+ for(let i=0;i<24;i++)assert.equal(await limitCollection(request,env,5,600_000),null);
+ const limited=await limitCollection(request,env,5,600_000);assert.equal(limited?.status,429);assert.equal(limited?.headers.get('Retry-After'),'60');assert.equal(await limitCollection(request,env,5,660_000),null);
+ sql.prepare('UPDATE collection_budgets SET used=1200 WHERE key=?').run('global:11');assert.equal((await limitCollection(new Request(request,{headers:{'CF-Connecting-IP':'192.0.2.6'}}),env,1,660_000))?.status,429);
+ assert.equal((await limitCollection(new Request('https://veylens.test/api/source-health'),env,1,660_000))?.status,503);
+ sql.close();assert.equal((await limitCollection(request,env,1,720_000))?.status,503);
+});
