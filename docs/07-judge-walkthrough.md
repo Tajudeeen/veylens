@@ -1,7 +1,7 @@
 # Veylens judge walkthrough, v1.1
 
 The production workspace contains no sample loaders. Examples are isolated on
-`/demo.html`. Arrange viewer access to the private publication before submission.
+`/demo.html`. The [Vercel workspace](https://veylens.vercel.app/workspace) is publicly reachable and local import/replay requires no sign-in or server key. Live Vercel collection is unavailable until signing and budget secrets are configured. The previous private Site remains a fallback and still requires viewer access.
 
 ## Real public-testnet regression
 

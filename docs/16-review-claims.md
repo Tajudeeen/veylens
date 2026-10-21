@@ -9,7 +9,7 @@ This records the boundaries used when acting on the October 21, 2026 repository 
 | Veylens measures the extent of the NEAR privacy leak | The build detects relationships in supplied case records. It has no ecosystem-wide crawler, population denominator or validated exposure-volume study. |
 | Different shielded addresses prove different viewing keys | Public addresses alone do not establish incoming-viewing-key independence. The current build does not verify a wallet's one-time-key derivation or recovery behavior. |
 | Veylens verifies the Zakura fix works | That requires a separate integration, test vectors and wallet-level evidence. It is a possible future use, not a completed capability. |
-| MIT alone establishes public auditability | The repository declares MIT and now includes the actual licence. GitHub reports public source access as checked on October 21, 2026. The working Site remains private. |
+| MIT alone establishes public auditability | The repository declares MIT and now includes the actual licence. GitHub source and Vercel pages are publicly reachable as checked on October 21, 2026. The previous Site remains a private fallback. |
 | Missing governance files | SECURITY.md and CONTRIBUTING.md have been added, with a concrete disclosure path, reproduction steps and evidence requirements. |
 | No direct demo link | The README already linked the hosted Demo lab. A concise quick start now distinguishes that demo from the mined public-testnet experiment. |
 | CodeQL and secret scanning are enabled | The new CodeQL workflow runs for the currently public repository. Its outcome must be checked, not inferred from its presence. Repository-level secret-scanning and disclosure settings still require administrator access. |

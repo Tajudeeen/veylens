@@ -4,13 +4,13 @@ You can reproduce the committed public-testnet result without a wallet, API key,
 
 ## In the browser
 
-1. Open the [current private workspace](https://veylens-privacy-workspace.deeen-code.chatgpt.site/workspace.html). Access must be granted by the owner. Vercel cutover is pending, as recorded in [the deployment guide](15-vercel-deployment.md).
+1. Open the [Vercel workspace](https://veylens.vercel.app/workspace). No sign-in or external keys are required for this local-import walkthrough. Live collection has separate pending server configuration, recorded in [the deployment guide](15-vercel-deployment.md).
 2. Download `examples/testnet-refund/collector-vulnerable.case.json` from this repository. Import that original case into Workspace and run the review.
 3. Inspect `public-source-address-reuse-in-supplied-transactions` and the exact transparent refund output. The raw transactions and receipts are checked locally.
 4. Use Open report in verifier. Integrity verification and source replay should both succeed. For a portable check, export the signed report and original source and import both in Verify.
 5. In Compare, use `collector-vulnerable.case.json` as baseline and `collector-corrected.case.json` as current. Reuse disappears. The corrected case still has insufficient evidence for complete privacy.
 
-For an immediate UI tour, [Demo lab](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html) uses labelled declared examples. These are separate from the mined public-testnet experiment and the empty live workspace.
+For an immediate UI tour, [Demo lab](https://veylens.vercel.app/demo) uses labelled declared examples. These are separate from the mined public-testnet experiment and the empty live workspace.
 
 ## From a terminal
 

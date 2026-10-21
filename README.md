@@ -4,12 +4,12 @@ Review Zcash integration refund paths using original provider records and raw
 transaction evidence. Detect public address reuse, distinguish checked evidence
 from source assertions, and export reports that others can independently replay.
 
-- [Overview](https://veylens-privacy-workspace.deeen-code.chatgpt.site/)
-- [Compare cases](https://veylens-privacy-workspace.deeen-code.chatgpt.site/compare.html)
-- [Verify reports](https://veylens-privacy-workspace.deeen-code.chatgpt.site/verify.html)
-- [Methodology](https://veylens-privacy-workspace.deeen-code.chatgpt.site/methodology.html)
-- [Workspace](https://veylens-privacy-workspace.deeen-code.chatgpt.site/workspace.html)
-- [Isolated examples](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html)
+- [Overview](https://veylens.vercel.app/)
+- [Compare cases](https://veylens.vercel.app/compare.html)
+- [Verify reports](https://veylens.vercel.app/verify.html)
+- [Methodology](https://veylens.vercel.app/methodology.html)
+- [Workspace](https://veylens.vercel.app/workspace.html)
+- [Isolated examples](https://veylens.vercel.app/demo.html)
 - [Judge walkthrough](docs/07-judge-walkthrough.md)
 - [Quick start without external keys](docs/14-quick-start.md)
 - [Real public-testnet experiment](docs/11-testnet-refund-regression.md)
@@ -18,15 +18,17 @@ from source assertions, and export reports that others can independently replay.
 - [Vercel migration and cutover status](docs/15-vercel-deployment.md)
 - [Security disclosure policy](SECURITY.md) and [contribution guide](CONTRIBUTING.md)
 
-The existing publication is private. Arrange explicit reviewer access before
-relying on it for submission. The GitHub repository is public as checked on
-October 21, 2026. Examples contain public test
+The Vercel pages and API routes are live and publicly reachable. Live collection
+is currently disabled until server signing and budget secrets are configured.
+Local import, analysis and replay work without those secrets. The GitHub repository
+is public as checked on October 21, 2026. Examples contain public test
 transactions. The working workspace starts empty and never substitutes fixtures
 when an upstream request fails.
 
-Vercel migration code is prepared. Publication is currently blocked by the
-connected account's missing access to the owner's Vercel team. The links above
-remain the working deployment until a checked Vercel URL replaces them.
+Vercel deployment succeeded for version 1.1.1. Runtime setup remains blocked by
+the connected account's missing access to the owner's Vercel team. The previous
+[private Site](https://veylens-privacy-workspace.deeen-code.chatgpt.site/) remains
+a fallback until live collection is checked on Vercel.
 
 ## Current release: 1.1.1
 

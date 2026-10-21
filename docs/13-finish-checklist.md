@@ -1,6 +1,6 @@
 # Veylens 1.1 handover
 
-The Vercel migration and October 21 review follow-up are recorded in [the deployment guide](15-vercel-deployment.md) and [the claim review](16-review-claims.md). The previous Site remains live until the new protected deployment is checked. Source-code preparation does not establish that cutover has happened.
+The Vercel migration and October 21 review follow-up are recorded in [the deployment guide](15-vercel-deployment.md) and [the claim review](16-review-claims.md). Vercel 1.1.1 pages and API routes are live, while collector runtime configuration is pending. The previous private Site remains a fallback until live collection is checked on the new deployment.
 
 ## Code completed
 

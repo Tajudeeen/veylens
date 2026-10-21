@@ -2,13 +2,15 @@
 
 ## Current state
 
-The application code supports Vercel Node.js Functions and static page delivery. The previous private ChatGPT Site remains the current working deployment. It has not been shut down or redirected. Vercel publication is blocked because the connected account cannot access the owner's `deeencodes` team, ID `team_raaAOk0abaIpiJkNOLg5lS7u`. No Vercel production URL is claimed until an actual deployment is ready and checked.
+Veylens 1.1.1 is serving at https://veylens.vercel.app. GitHub's Vercel integration reports successful deployment of commit `38ec9d4593ff77ef96699700e270f216bc2027ee`, with [deployment details](https://vercel.com/deeencodes/veylens/4A7EsdFekX329wKu2kH57fxciYfv). Public HTTP checks confirmed the pages and API routes. `/api/capabilities` reports version 1.1.1, `collectorSigning=false`, `collectionProtection=unavailable` and no configured full nodes. Live collection therefore remains unavailable while local import and replay can be used.
+
+The connected Vercel API still returns 403 for the owner's `deeencodes` team, ID `team_raaAOk0abaIpiJkNOLg5lS7u`. It cannot set the required server secrets or finish runtime verification. The previous private ChatGPT Site has not been shut down or redirected and remains a fallback. Do not transfer its private signer or access token to the new deployment.
 
 The dedicated budget Worker is deployed at `https://veylens-budget.tajudeenowoeteniyan.workers.dev/admit`. On October 21, 2026, an unsigned request returned 401, a signed synthetic admission succeeded, and the native D1 query showed its client and global counters. No case identifiers, Site access token or original collector private key were sent in that check. This verifies the admission backend, not the pending Vercel application deployment.
 
 The migration code passed [GitHub verification run 39677625791](https://github.com/Tajudeeen/veylens/actions/runs/39677625791): 225 code tests, 20 desktop/mobile browser tests, both builds, submission checks and a dependency audit with zero reported vulnerabilities. [CodeQL run 39677625712](https://github.com/Tajudeeen/veylens/actions/runs/39677625712) completed and uploaded its analysis results. A completed scan is not an independent security audit or a claim of zero code defects.
 
-Keep the current Site's private audience during staging. Check the team's available deployment protection before promoting a production deployment. Preserve repository visibility, which is public as checked on October 21, 2026. Do not make the existing Site or a Vercel production alias public as a side effect of migration. Authorize a public submission URL separately if desired.
+The owner-created Vercel project is publicly reachable. This migration did not change its audience, the previous Site's private access or the repository's existing public visibility. Keep secrets and evidence out of static assets. Local user cases remain browser-side, with explicit disclosure required for live collection.
 
 ## Architecture
 
@@ -67,4 +69,8 @@ CI also exercises desktop and mobile browser flows. A protected Vercel staging d
 
 Confirm all six pages, headers, direct routes, collector key metadata, capabilities, valid and invalid API requests, a shared rate denial, a fresh receipt and independent case replay. A portable source re-fetch intentionally discloses its public identifiers to the new collector and upstream source. Do not retry a previously blocked disclosure check without explicit authorization for that destination and payload.
 
-Only after those checks pass, replace the active links in README and the quick start with the exact returned Vercel URL. Preserve the old Site as a rollback until cutover is accepted. Browser storage belongs to an origin: export encrypted snapshots from the old Site, then import them on Vercel. It will not see the old origin's local or session storage automatically.
+The README and quick start now point to the verified Vercel pages and explicitly disclose the unavailable live collector. Complete the API runtime checks before claiming a full collector cutover. Preserve the old Site as a rollback until then. Browser storage belongs to an origin: export encrypted snapshots from the old Site, then import them on Vercel. It will not see the old origin's local or session storage automatically.
+
+## Build-failure repair
+
+The failed deployment used older commit `aea6fcd` with TypeScript-only `npm run build` and a default `public` output directory. The 1.1.1 repair pins Node.js 24, makes `npm run build` produce the web artifacts, keeps `build:core` for TypeScript-only compilation, and declares `dist/client` in `vercel.json`. Build and output settings in that file override dashboard defaults. Redeploy current `main`, rather than redeploying the old failed commit. [CI run 39678495881](https://github.com/Tajudeeen/veylens/actions/runs/39678495881) passed 225 code tests, 20 browser tests and the dependency audit for the repaired source.
