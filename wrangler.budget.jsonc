@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "veylens-budget",
+  "main": "src/server/budgetWorker.ts",
+  "account_id": "ebfd40fd730d967c3d3e4d32934a6313",
+  "compatibility_date": "2026-10-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {"enabled": true, "logs": {"enabled": true, "invocation_logs": false}},
+  "d1_databases": [{"binding": "DB", "database_name": "veylens-budget", "database_id": "7538ca7e-a676-47af-85b0-a91ba3bc45ce", "migrations_dir": "drizzle"}]
+}

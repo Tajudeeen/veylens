@@ -11,14 +11,21 @@ from source assertions, and export reports that others can independently replay.
 - [Workspace](https://veylens-privacy-workspace.deeen-code.chatgpt.site/workspace.html)
 - [Isolated examples](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html)
 - [Judge walkthrough](docs/07-judge-walkthrough.md)
+- [Quick start without external keys](docs/14-quick-start.md)
 - [Real public-testnet experiment](docs/11-testnet-refund-regression.md)
 - [Completion and operations checklist](docs/13-finish-checklist.md)
 - [Current evidence contract and release verification](docs/12-release-readiness.md)
+- [Vercel migration and cutover status](docs/15-vercel-deployment.md)
+- [Security disclosure policy](SECURITY.md) and [contribution guide](CONTRIBUTING.md)
 
 The existing publication and repository are private. Arrange explicit reviewer
 access before relying on either link for submission. Examples contain public test
 transactions. The working workspace starts empty and never substitutes fixtures
 when an upstream request fails.
+
+Vercel migration code is prepared. Publication is currently blocked by the
+connected account's missing access to the owner's Vercel team. The links above
+remain the working deployment until a checked Vercel URL replaces them.
 
 ## Current release: 1.1.0
 
@@ -100,7 +107,9 @@ providerLookup can refresh the provider status. No provider input is invented.
 
 ## Runtime configuration
 
-The Worker serves the client and same-origin API. Static-only hosting supports
+The current Worker serves the client and same-origin API. The Vercel target uses
+Node.js Functions with an authenticated, independent D1 budget service. See the
+migration guide for required configuration and signing-key cutover. Static-only hosting supports
 local imports and replay but cannot supply the collector API.
 
 | Runtime variable | Purpose |
@@ -158,7 +167,7 @@ the current release contract takes precedence.
 
 ## License
 
-MIT. See THIRD_PARTY_NOTICES.md for dependencies and upstream test material.
+[MIT](LICENSE). See THIRD_PARTY_NOTICES.md for dependencies and upstream test material.
 
 ## Page navigation and intro
 

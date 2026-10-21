@@ -1,0 +1,9 @@
+node_modules
+dist
+test-results
+playwright-report
+*.pkcs8
+*.key
+.env*
+.dev.vars*
+*.capture.json

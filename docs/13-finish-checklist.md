@@ -1,5 +1,7 @@
 # Veylens 1.1 handover
 
+The Vercel migration and October 21 review follow-up are recorded in [the deployment guide](15-vercel-deployment.md) and [the claim review](16-review-claims.md). The previous Site remains live until the new protected deployment is checked. Source-code preparation does not establish that cutover has happened.
+
 ## Code completed
 
 - Six real documents and direct routes, branded intro and mobile navigation.
