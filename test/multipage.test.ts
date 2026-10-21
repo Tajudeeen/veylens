@@ -2,6 +2,7 @@ import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { createHash, webcrypto } from "node:crypto";
 import { JSDOM } from "jsdom";
+import { existsSync } from "node:fs";
 import { buildAppHtml } from "../src/web/build.js";
 import { renderSitePages } from "../src/web/page.js";
 import { signReport, generateKeyPair } from "../src/attest.js";
@@ -51,6 +52,7 @@ test("all local navigation targets exist, page IDs are unique, current location 
     for (const a of doc.querySelectorAll("a[href]")) {
       const href = a.getAttribute("href") as string;
       if (href.startsWith("#")) assert.ok(doc.getElementById(href.slice(1)), href);
+      else if (href.startsWith("/methodology/")) assert.ok(existsSync(`assets${href}`), href);
       else if (!href.startsWith("https://")) assert.ok(pages[href.split("?")[0] as string], href);
     }
     dom.window.close();
