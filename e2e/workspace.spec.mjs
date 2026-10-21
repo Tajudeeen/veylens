@@ -84,7 +84,7 @@ test('dedicated comparison page independently reviews files and invalidates repl
  await page.locator('#compare-clear').click();await expect(page.locator('#compare-before-status')).toHaveText('No case attached.');
 });
 test('main page links navigate distinct documents and demo retains the shared navigation',async({page})=>{
- await page.goto('/workspace');
+ await page.goto('/workspace/');await expect(page).toHaveURL(/\/workspace$/);
  const nav=page.viewportSize().width<1024?page.getByRole('navigation',{name:'Main pages'}):page.getByRole('navigation',{name:'Primary'});
  await nav.getByRole('link',{name:'Compare',exact:true}).click();await expect(page).toHaveURL(/compare.html$/);await expect(page.locator('h1')).toHaveText('What did the correction change?');
  await page.goBack();await expect(page).toHaveURL(/workspace$/);await expect(page.locator('h1')).toHaveText('Trace the refund.');
