@@ -9,10 +9,10 @@ This records the boundaries used when acting on the October 21, 2026 repository 
 | Veylens measures the extent of the NEAR privacy leak | The build detects relationships in supplied case records. It has no ecosystem-wide crawler, population denominator or validated exposure-volume study. |
 | Different shielded addresses prove different viewing keys | Public addresses alone do not establish incoming-viewing-key independence. The current build does not verify a wallet's one-time-key derivation or recovery behavior. |
 | Veylens verifies the Zakura fix works | That requires a separate integration, test vectors and wallet-level evidence. It is a possible future use, not a completed capability. |
-| MIT and private source mean public auditability | The repository declares MIT and now includes the actual licence. Its current private access still limits independent review and contribution. |
+| MIT alone establishes public auditability | The repository declares MIT and now includes the actual licence. GitHub reports public source access as checked on October 21, 2026. The working Site remains private. |
 | Missing governance files | SECURITY.md and CONTRIBUTING.md have been added, with a concrete disclosure path, reproduction steps and evidence requirements. |
 | No direct demo link | The README already linked the hosted Demo lab. A concise quick start now distinguishes that demo from the mined public-testnet experiment. |
-| CodeQL and secret scanning are enabled | Configuration files do not enable paid/private GitHub services. The workflow documents its licence gate. Repository-level settings require administrator access. |
+| CodeQL and secret scanning are enabled | The new CodeQL workflow runs for the currently public repository. Its outcome must be checked, not inferred from its presence. Repository-level secret-scanning and disclosure settings still require administrator access. |
 | Mainnet use is required by the competition | Recheck the actual current event's official rules. Meaningful Zcash interaction and a mandatory mainnet-only demonstration are different requirements. No grade establishes eligibility. |
 
 The published $600M–$700M figure is reported route volume, not a measurement produced by Veylens or a demonstrated amount stolen or deanonymized. Do not turn it into an exposure estimate without a reproducible dataset and clear assumptions.

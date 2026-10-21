@@ -81,9 +81,11 @@ The verification recorded below is historical. The v1.1 implementation and opera
 
 ## Publication and access
 
-The existing Site stays owner-private. The GitHub source stays private. Reviewer
-access needs an explicitly chosen audience or named reviewers. No audience change
-or external invitation is made by this release. Runtime secret values are preserved.
+The existing Site stays owner-private. The GitHub source is public as checked on
+October 21, 2026. Site reviewer access needs an explicitly chosen audience or named
+reviewers. No audience change or external invitation is made by this release.
+Existing Site runtime secret values are preserved. Vercel migration status is
+recorded in [the deployment guide](15-vercel-deployment.md).
 Check collection services reports the deployed version, sources, signing presence
 and node capabilities without exposing secrets.
 

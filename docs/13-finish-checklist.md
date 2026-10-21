@@ -54,7 +54,7 @@ No key is trusted because a receipt or an API response supplies it. Trust change
 
 - Obtain an attributed real integration refund with its original non-dry provider records. The committed public-testnet experiment has operator-assigned refund roles.
 - Run physical-device QA. Chromium mobile emulation is automated coverage, not a test on the owner's phone.
-- Arrange explicit reviewer access to the private Site and private source.
+- Arrange explicit reviewer access to the private Site. The GitHub source is public as checked on October 21, 2026.
 - Record the final demo and submit the required materials.
 
 Wallet exports remain assertions. Full chain consensus, shielded delivery and wallet ownership are outside the v1.1 evidence contract. No UI, receipt, health check or passing test upgrades those claims.

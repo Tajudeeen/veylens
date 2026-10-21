@@ -6,7 +6,9 @@ The application code supports Vercel Node.js Functions and static page delivery.
 
 The dedicated budget Worker is deployed at `https://veylens-budget.tajudeenowoeteniyan.workers.dev/admit`. On October 21, 2026, an unsigned request returned 401, a signed synthetic admission succeeded, and the native D1 query showed its client and global counters. No case identifiers, Site access token or original collector private key were sent in that check. This verifies the admission backend, not the pending Vercel application deployment.
 
-Keep the current private audience during staging. Check the team's available deployment protection before promoting a production deployment. Do not make the repository, existing Site or a Vercel production alias public as a side effect of migration. Authorize a public submission URL separately if desired.
+The migration code passed [GitHub verification run 39677625791](https://github.com/Tajudeeen/veylens/actions/runs/39677625791): 225 code tests, 20 desktop/mobile browser tests, both builds, submission checks and a dependency audit with zero reported vulnerabilities. [CodeQL run 39677625712](https://github.com/Tajudeeen/veylens/actions/runs/39677625712) completed and uploaded its analysis results. A completed scan is not an independent security audit or a claim of zero code defects.
+
+Keep the current Site's private audience during staging. Check the team's available deployment protection before promoting a production deployment. Preserve repository visibility, which is public as checked on October 21, 2026. Do not make the existing Site or a Vercel production alias public as a side effect of migration. Authorize a public submission URL separately if desired.
 
 ## Architecture
 
@@ -34,7 +36,7 @@ This endpoint deliberately returns no unauthenticated health information. An aut
 
 ## Vercel configuration
 
-Import `Tajudeeen/veylens` into the owner's team. `vercel.json` selects no framework, runs `npm ci` and `npm run build:web`, publishes `dist/client`, and sets a 30-second limit for API Functions. Choose Node.js 24. Keep Git source visibility private.
+Import `Tajudeeen/veylens` into the owner's team. `vercel.json` selects no framework, runs `npm ci` and `npm run build:web`, publishes `dist/client`, and sets a 30-second limit for API Functions. Choose Node.js 24. Do not change Git source visibility during import.
 
 Required server-only production variables:
 

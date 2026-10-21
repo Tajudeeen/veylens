@@ -18,8 +18,9 @@ from source assertions, and export reports that others can independently replay.
 - [Vercel migration and cutover status](docs/15-vercel-deployment.md)
 - [Security disclosure policy](SECURITY.md) and [contribution guide](CONTRIBUTING.md)
 
-The existing publication and repository are private. Arrange explicit reviewer
-access before relying on either link for submission. Examples contain public test
+The existing publication is private. Arrange explicit reviewer access before
+relying on it for submission. The GitHub repository is public as checked on
+October 21, 2026. Examples contain public test
 transactions. The working workspace starts empty and never substitutes fixtures
 when an upstream request fails.
 

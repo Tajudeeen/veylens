@@ -20,7 +20,7 @@ Receipts authenticate an observation, not source honesty. Merkle paths check mem
 
 - CI runs the dependency audit, adversarial tests, replay checks and browser checks. A weekly workflow repeats the dependency audit.
 - Dependabot checks npm and GitHub Actions weekly. Its configuration is not proof that repository alerts or update permissions are enabled.
-- A CodeQL workflow runs for public repositories, or when the owner sets `VEYLENS_CODEQL_ENABLED=true` after enabling eligible GitHub Code Security for this private repository. A skipped job is not a successful security scan.
+- A CodeQL workflow runs for this public repository. If the source becomes private, the owner must enable eligible GitHub Code Security and set `VEYLENS_CODEQL_ENABLED=true` before scans run. A skipped job is not a successful security scan.
 - Repository administrators must separately enable available Dependabot alerts, secret scanning, push protection and private vulnerability reporting in GitHub settings. The connected GitHub App cannot change those administration settings. Private-repository availability depends on the account's plan and licence.
 
 Keep secrets in provider secret storage. Never add them to Git, screenshots, build output, browser input, issue reports or workflow artifacts. Signing-key rotation and revocation are documented in [the operations checklist](docs/13-finish-checklist.md).
