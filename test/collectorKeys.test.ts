@@ -21,3 +21,8 @@ test('legacy pinned specimens remain valid and cannot acquire an unsigned key ID
  assert.equal(await verifyCollection({txid:row.txid,hex:row.hex},row.receipt,row.receipt.source,binding),true);
  assert.equal(await verifyCollection({txid:row.txid,hex:row.hex},{...row.receipt,keyId:LEGACY_COLLECTOR_KEY_ID},row.receipt.source,binding),false);
 });
+
+test('key generation refuses reused IDs and overwrite, and prints no private material',async()=>{
+ const {mkdtempSync,existsSync,statSync,rmSync}=await import('node:fs');const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {spawnSync}=await import('node:child_process');const dir=mkdtempSync(join(tmpdir(),'veylens-keygen-')),path=join(dir,'new.pkcs8');
+ try{const reused=spawnSync(process.execPath,['scripts/collector-keygen.mjs',LEGACY_COLLECTOR_KEY_ID,path],{encoding:'utf8'});assert.notEqual(reused.status,0);assert.equal(existsSync(path),false);const made=spawnSync(process.execPath,['scripts/collector-keygen.mjs','test-future-key',path],{encoding:'utf8'});assert.equal(made.status,0,made.stderr);const privateKey=readFileSync(path,'utf8').trim();assert.ok(!made.stdout.includes(privateKey));assert.equal(JSON.parse(made.stdout).keyId,'test-future-key');if(process.platform!=='win32')assert.equal(statSync(path).mode&0o777,0o600);assert.notEqual(spawnSync(process.execPath,['scripts/collector-keygen.mjs','test-future-key',path]).status,0);}finally{rmSync(dir,{recursive:true,force:true});}
+});

@@ -1,4 +1,4 @@
-const MAX_BYTES=2_000_000,ITERATIONS=310_000;
+const MAX_BYTES=2_000_000,ITERATIONS=600_000;
 export interface CaseVault {format:'veylens-vault/1';kdf:'PBKDF2-SHA256';iterations:number;salt:string;iv:string;ciphertext:string}
 const b64=(b:Uint8Array):string=>{let s='';for(const x of b)s+=String.fromCharCode(x);return btoa(s);};
 const bytes=(s:unknown,max:number):Uint8Array<ArrayBuffer>=>{if(typeof s!=='string'||s.length>Math.ceil(max/3)*4||!/^[A-Za-z0-9+/]*={0,2}$/.test(s))throw new Error('Invalid encrypted case.');const b=Uint8Array.from(atob(s),c=>c.charCodeAt(0));if(b.length>max)throw new Error('Encrypted case is too large.');return b;};
@@ -7,7 +7,7 @@ async function key(passphrase:string,salt:Uint8Array<ArrayBuffer>,iterations:num
  const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(passphrase),'PBKDF2',false,['deriveKey']);
  return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
-const aad=new TextEncoder().encode('veylens-vault/1:PBKDF2-SHA256:310000');
+const aad=new TextEncoder().encode(`veylens-vault/1:PBKDF2-SHA256:${ITERATIONS}`);
 export async function encryptCase(source:string,passphrase:string):Promise<CaseVault>{
  const input=new TextEncoder().encode(source);if(!input.length||input.length>MAX_BYTES)throw new Error('Case must contain at most 2 MB of JSON.');JSON.parse(source);
  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));

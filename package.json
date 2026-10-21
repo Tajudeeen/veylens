@@ -21,7 +21,7 @@
     "dev": "npm run build:web && node scripts/serve-dev.mjs",
     "db:generate": "drizzle-kit generate",
     "check:deployment": "npm run build && node scripts/check-deployment.mjs",
-    "collector:keygen": "node scripts/collector-keygen.mjs"
+    "collector:keygen": "npm run build && node scripts/collector-keygen.mjs"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

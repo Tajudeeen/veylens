@@ -3,7 +3,7 @@
 ## Code completed
 
 - Six real documents and direct routes, branded intro and mobile navigation.
-- Explicit AES-256-GCM encrypted case snapshots with PBKDF2-SHA256, independent restore validation, encrypted file export/import, and passphrase clearing. The user chooses whether to save on this device. No automatic evidence storage.
+- Explicit AES-256-GCM encrypted case snapshots with PBKDF2-SHA256 at 600,000 iterations, independent restore validation, encrypted file export/import, and passphrase clearing. The user chooses whether to save on this device. No automatic evidence storage.
 - Before-unload protection for case data changed since its last source export or encrypted snapshot. Browsers control this prompt and may suppress it without prior user interaction.
 - One-time, two-minute same-tab verifier handoff. Source and report enter session storage only after the user requests it. The record is consumed on arrival and source replay runs locally. Nothing enters a URL or request body.
 - Collector receipt v2 with signed key IDs, release-pinned public trust policy, retired-key compatibility, explicit revocation, and legacy v1 verification.
@@ -42,7 +42,7 @@ For a private Site, provide `VEYLENS_SITE_TOKEN` through the process environment
 ## Key rotation procedure
 
 1. Run `npm run collector:keygen -- new-key-id /private/path/new-key.pkcs8`. It creates a new mode-0600 file, refuses overwrite and prints public metadata only. On Windows, also restrict the file's ACL. Keep this file outside the repository.
-2. Add the public key, status and validity dates to `src/collectorKeys.ts`. Keep old public keys. Deploy the verifier before changing the active runtime signer.
+2. Never reuse a key ID for a different key. Add the public key, status and validity dates to `src/collectorKeys.ts`. Keep old public keys. Deploy the verifier before changing the active runtime signer.
 3. Change the runtime private signer and key ID together, then redeploy and run the smoke check. The API checks that the private signer matches the pinned active public key.
 4. Mark a stopped key retired and set its final validity date to preserve historical verification. A compromised key should be revoked. Revocation rejects its receipts even when they claim an earlier timestamp. Historical receipts cannot prove they predate a compromise merely by asserting a date.
 
@@ -56,3 +56,5 @@ No key is trusted because a receipt or an API response supplies it. Trust change
 - Record the final demo and submit the required materials.
 
 Wallet exports remain assertions. Full chain consensus, shielded delivery and wallet ownership are outside the v1.1 evidence contract. No UI, receipt, health check or passing test upgrades those claims.
+
+The PBKDF2 work factor follows the SHA-256 guidance in the [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2). Native Web Crypto derives the encryption key, and AES-GCM authenticates the encrypted case. This does not certify the implementation or protect a case on an already compromised device.
