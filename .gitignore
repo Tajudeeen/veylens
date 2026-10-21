@@ -6,3 +6,8 @@ dist/
 playwright-report/
 test-results/
 *.capture.json
+
+*.pkcs8
+*.key
+.env*
+.dev.vars*

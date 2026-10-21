@@ -318,7 +318,7 @@ function initApp(): void {
   });
 }
 
-async function checkSourceFromInput(): Promise<void> {
+export async function checkSourceFromInput(): Promise<void> {
   try {
     const reportText = byId<HTMLTextAreaElement>("v-in").value;
     const sourceText = byId<HTMLTextAreaElement>("v-source").value;

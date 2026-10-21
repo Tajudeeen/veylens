@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {handleApi} from '../src/server/api.js';
+import {handleApi} from './helpers/collector.js';
 import {readFileSync} from 'node:fs';
 import {inspectWalletExport} from '../src/wallet.js';
 const req=(path:string,body:unknown,origin='https://veylens.test')=>new Request(`https://veylens.test${path}`,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(body)});

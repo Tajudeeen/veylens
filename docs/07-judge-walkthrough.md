@@ -1,4 +1,4 @@
-# Veylens judge walkthrough, v1.0
+# Veylens judge walkthrough, v1.1
 
 The production workspace contains no sample loaders. Examples are isolated on
 `/demo.html`. Arrange viewer access to the private publication before submission.
@@ -11,8 +11,8 @@ The production workspace contains no sample loaders. Examples are isolated on
 4. Inspect the source prevout and refund output. Both identify the same real test
    address. The refund output contains exactly 3,000,000 zatoshis.
 5. Export the signed report and its source, then verify and replay them.
-6. Import the vulnerable source as the comparison baseline. Import
-   `examples/testnet-refund/collector-corrected.case.json` as the current case and compare.
+6. Open Compare. Import the vulnerable source as Original case and
+   `examples/testnet-refund/collector-corrected.case.json` as Corrected case, then compare.
 7. Observe removed reuse and transparent-output findings. The corrected result
    remains insufficient because shielded delivery and full privacy require more evidence.
 
@@ -88,5 +88,12 @@ using deliberately invalid proofs/signatures. They test rule behavior and the fu
 UI-to-report workflow. They are not real mined transactions or a historical leak
 reproduction. The full attributed real-world refund case remains evidence-dependent.
 
-Browser interaction tests run in a simulated DOM. Actual browser/device QA remains
-outstanding. A successful deployed HTTP lookup is tested separately.
+GitHub Actions executes the actual bundled Worker in desktop Chromium and a Pixel 7 viewport. The suite covers imports, signing, replay, tampering, separate-page navigation, comparison, splash, encrypted snapshots, verifier handoff and unsaved-case protection. Physical-device QA remains outstanding. Live production collection is a separate deployment smoke check.
+
+## Save, resume and verify
+
+In Workspace, open Save or restore this case. Enter a passphrase and explicitly save an encrypted snapshot on the device or download an encrypted file. Reload, unlock and confirm that the evidence is re-reviewed. No plaintext case or passphrase should appear in local storage. Use Forget saved snapshot to remove only the saved encrypted copy.
+
+After a review, Open report in verifier transfers the current report and source in the same tab, consumes the temporary handoff and runs both integrity verification and independent source replay. The transfer is not a public share link.
+
+See [the finish and operations checklist](13-finish-checklist.md) for the current deployment dependencies and external evidence tasks.

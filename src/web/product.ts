@@ -1,7 +1,8 @@
 import {initComparison} from './comparison.js';
 import {reviewCase,compareCaseReports} from '../case.js';
 import {inspectWalletExport,sanitizeWalletExport} from '../wallet.js';
-import {loadInput} from './app.js';
+import {loadInput,checkSigned,checkSourceFromInput} from './app.js';
+import {initContinuity,takeVerifierHandoff,validateStoredInput} from './continuity.js';
 import {inspectReceiver} from '../receivers.js';
 import {decodeZcashTransaction} from '../zcash.js';
 const get=(id:string)=>document.getElementById(id);
@@ -56,8 +57,8 @@ get('collect')?.addEventListener('click',async()=>{
  }catch(e){if(draft.transactions.length||draft.provider)showDraft();status(e instanceof Error?e.message:'Collection failed.');}finally{button.disabled=false;for(const id of busyIds){const control=get(id) as HTMLInputElement|null;if(control)control.disabled=false;}}
 });
 get('review-case')?.addEventListener('click',()=>{roles();showDraft(true);});
-for(const id of ['case-shielding','case-refund'])get(id)?.addEventListener('input',()=>{const results=get('results');if(results)results.hidden=true;const empty=get("review-empty");if(empty)empty.hidden=false;status('Case roles changed. Review attached evidence again.');});
-get('clear-case')?.addEventListener('click',()=>{caseRevision++;draft={format:'veylens-case/1',network:value('lookup-network')==='testnet'?'testnet':'mainnet',transactions:[]};for(const id of ['case-shielding','case-refund','lookup-id','lookup-memo'])(get(id) as HTMLInputElement).value='';showDraft();status('Case cleared.');});
+for(const id of ['case-shielding','case-refund'])get(id)?.addEventListener('input',()=>{const results=get('results');if(results)results.hidden=true;const empty=get("review-empty");if(empty)empty.hidden=false;roles();showDraft();status('Case roles changed. Review attached evidence again.');});
+get('clear-case')?.addEventListener('click',()=>{caseRevision++;draft={format:'veylens-case/1',network:value('lookup-network')==='testnet'?'testnet':'mainnet',transactions:[]};for(const id of ['case-shielding','case-refund','lookup-id','lookup-memo'])(get(id) as HTMLInputElement).value='';showDraft();window.dispatchEvent(new Event('veylens-case-cleared'));status('Case cleared.');});
 get('case-file')?.addEventListener('change',async event=>{
  const file=(event.target as HTMLInputElement).files?.[0];if(!file)return;const revision=++caseRevision;
  try{
@@ -78,7 +79,7 @@ get('case-file')?.addEventListener('change',async event=>{
  }catch(e){status(e instanceof Error?e.message:'Invalid case file.');}
 });
 function download(data:unknown,name:string):void{const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-get('download-source')?.addEventListener('click',()=>{try{download(JSON.parse(value('flow-input')),'veylens-case-evidence.json');}catch{status('No valid source evidence to download.');}});
+get('download-source')?.addEventListener('click',()=>{try{download(JSON.parse(value('flow-input')),'veylens-case-evidence.json');window.dispatchEvent(new Event('veylens-source-exported'));}catch{status('No valid source evidence to download.');}});
 get('inspect-receiver')?.addEventListener('click',()=>{
  const out=get('receiver-result');if(!out)return;
  try{const result=inspectReceiver(value('receiver-address'),value('lookup-network')==='testnet'?'testnet':'mainnet');out.textContent=`${result.encoding}: ${result.receivers.map(r=>r.kind).join(', ')}. ${result.limitations.join(' ')}`;}catch(e){out.textContent=e instanceof Error?e.message:'Invalid address.';}
@@ -109,8 +110,8 @@ get('compare-cases')?.addEventListener('click',async()=>{
 
 get('check-services')?.addEventListener('click',async()=>{
  const out=get('service-status');if(!out)return;
- try{const response=await fetch('/api/capabilities',{signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error('Service unavailable.');const info=await response.json() as {version?:string;collectorSigning?:boolean;sources?:{mainnet:string;testnet:string};blockInclusion?:{mainnet:boolean;testnet:boolean}};
- out.textContent=`Collector ${info.version??'unknown'}. Mainnet: ${info.sources?.mainnet??'unknown'}. Testnet: ${info.sources?.testnet??'unknown'}. Signed observations: ${info.collectorSigning?'enabled':'unavailable'}. Full-node inclusion: mainnet ${info.blockInclusion?.mainnet?'available':'not configured'}, testnet ${info.blockInclusion?.testnet?'available':'not configured'}.`;
+ try{const response=await fetch('/api/capabilities',{signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error('Service unavailable.');const info=await response.json() as {version?:string;collectorSigning?:boolean;sources?:{mainnet:string;testnet:string};blockInclusion?:{mainnet:boolean;testnet:boolean};collectionProtection?:string;collectorKeyId?:string};
+ out.textContent=`Collector ${info.version??'unknown'}. Mainnet: ${info.sources?.mainnet??'unknown'}. Testnet: ${info.sources?.testnet??'unknown'}. Signed observations: ${info.collectorSigning?'enabled':'unavailable'}. Collection protection: ${info.collectionProtection??'unknown'}. Signing key: ${info.collectorKeyId??'unknown'}. Full-node inclusion: mainnet ${info.blockInclusion?.mainnet?'configured, probe required':'not configured'}, testnet ${info.blockInclusion?.testnet?'configured, probe required':'not configured'}.`;
  }catch{out.textContent='Service check failed. Local evidence import and replay remain available.';}
 });
 get('wallet-file')?.addEventListener('change',async event=>{
@@ -122,3 +123,17 @@ get('wallet-file')?.addEventListener('change',async event=>{
 });
 
 initComparison();
+
+get('probe-node')?.addEventListener('click',async()=>{
+ const button=get('probe-node') as HTMLButtonElement,out=get('node-status')!;button.disabled=true;out.textContent='Checking the configured source…';
+ try{const response=await fetch('/api/source-health',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({network:value('lookup-network')}),signal:AbortSignal.timeout(20000)});const info=await response.json() as {error?:string;status?:string;height?:number;notice?:string};if(!response.ok)throw new Error(info.error??'Source check failed.');out.textContent=info.status==='not-configured'?info.notice??'No node configured.':`Node response checked at height ${info.height}. ${info.notice}`;}catch(e){out.textContent=e instanceof Error?e.message:'Source check failed.';}finally{button.disabled=false;}
+});
+initContinuity(async raw=>{
+ await validateStoredInput(raw);
+ if((raw as {format?:string}).format==='veylens-case/1'){
+  caseRevision++;draft=raw as CaseDraft;(get('case-shielding') as HTMLInputElement).value=draft.shieldingTxid??'';(get('case-refund') as HTMLInputElement).value=draft.refundTxid??'';(get('lookup-network') as HTMLSelectElement).value=draft.network;showDraft(true);
+ }else{loadInput(raw,true);const details=get('flow-input')?.closest('details');if(details)details.open=true;}
+});
+if(get('v-source')){
+ const handoff=takeVerifierHandoff();if(handoff){(get('v-in') as HTMLTextAreaElement).value=handoff.report;(get('v-source') as HTMLTextAreaElement).value=handoff.source;const details=get('v-source')!.closest('details');if(details)details.open=true;void(async()=>{await checkSigned(handoff.report,'v-out');await checkSourceFromInput();})();}
+}

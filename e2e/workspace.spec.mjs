@@ -94,3 +94,25 @@ test('main page links navigate distinct documents and demo retains the shared na
  const demoNav=page.viewportSize().width<1024?page.getByRole('navigation',{name:'All pages'}):page.getByRole('navigation',{name:'Primary'});
  await demoNav.getByRole('link',{name:'Workspace',exact:true}).click();await expect(page).toHaveURL(/workspace.html$/);await expect(page.locator('#flow-input')).toHaveValue('');
 });
+
+test('encrypted snapshots are opt-in, restore after reload and reject a wrong passphrase',async({page})=>{
+ await page.goto('/workspace');await page.locator('#case-file').setInputFiles(upload(vulnerable));await expect(page.locator('#r-signed')).not.toHaveValue('');
+ expect(await page.evaluate(()=>localStorage.getItem('veylens-encrypted-case/1'))).toBeNull();
+ await page.getByText('Save or restore this case',{exact:true}).click();await page.locator('#case-passphrase').fill('temporary test passphrase');await page.locator('#save-local').click();await expect(page.locator('#case-storage-status')).toContainText('Encrypted snapshot saved');
+ const stored=await page.evaluate(()=>localStorage.getItem('veylens-encrypted-case/1'));expect(stored).not.toContain(vulnerable.refundTxid);expect(stored).not.toContain('temporary test passphrase');
+ await page.reload();await expect(page.locator('#splash')).toHaveCount(0);await expect(page.locator('#flow-input')).toHaveValue('');
+ await page.getByText('Save or restore this case',{exact:true}).click();await page.locator('#case-passphrase').fill('incorrect test passphrase');await page.locator('#unlock-local').click();await expect(page.locator('#case-storage-status')).toContainText('Could not unlock');await expect(page.locator('#unlock-local')).toBeEnabled();
+ await page.locator('#case-passphrase').fill('temporary test passphrase');await page.locator('#unlock-local').click();await expect(page.locator('#r-verdict')).toContainText('High risk');await expect(page.locator('#case-storage-status')).toContainText('restored');
+ await page.locator('#case-passphrase').fill('temporary file passphrase');const downloaded=page.waitForEvent('download');await page.locator('#download-vault').click();const file=await downloaded;expect(file.suggestedFilename()).toBe('veylens-encrypted-case.json');
+ await expect(page.locator('#download-vault')).toBeEnabled();await page.locator('#clear-case').click();await expect(page.locator('#results')).toBeHidden();await page.locator('#case-passphrase').fill('temporary file passphrase');await page.locator('#vault-file').setInputFiles(await file.path());await expect(page.locator('#r-verdict')).toContainText('High risk');
+ await expect(page.locator('#forget-local')).toBeEnabled();await page.locator('#forget-local').click();expect(await page.evaluate(()=>localStorage.getItem('veylens-encrypted-case/1'))).toBeNull();
+});
+test('one-time handoff independently verifies the current report and consumes its temporary storage',async({page})=>{
+ await page.goto('/workspace');await page.locator('#case-file').setInputFiles(upload(vulnerable));await expect(page.locator('#r-signed')).not.toHaveValue('');await page.locator('#open-verifier').click();
+ await expect(page).toHaveURL(/verify.html$/);await expect(page.locator('#v-out')).toHaveAttribute('data-state','ok');await expect(page.locator('#v-source-out')).toHaveAttribute('data-state','ok');expect(await page.evaluate(()=>sessionStorage.getItem('veylens-verifier-handoff/1'))).toBeNull();
+});
+test('leaving an unsaved case warns and allows the user to stay',async({page})=>{
+ await page.goto('/workspace');await page.locator('#case-file').setInputFiles(upload(vulnerable));await expect(page.locator('#r-signed')).not.toHaveValue('');
+ const nav=page.viewportSize().width<1024?page.getByRole('navigation',{name:'Main pages'}):page.getByRole('navigation',{name:'Primary'});
+ const waiting=page.waitForEvent('dialog');const navigating=nav.getByRole('link',{name:page.viewportSize().width<1024?'Verify':'Verify report',exact:true}).click();const dialog=await waiting;expect(dialog.type()).toBe('beforeunload');await dialog.dismiss();await navigating;await expect(page).toHaveURL(/workspace$/);
+});

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {collectTestnet,grpcFrame,unaryPayload,protoFields} from '../src/server/lightwallet.js';
 import {bytesOf} from '../src/zcash.js';
-import {handleApi} from '../src/server/api.js';
+import {handleApi} from './helpers/collector.js';
 import {inspectLightwalletObservation} from '../src/observations.js';
 const data=JSON.parse(readFileSync('examples/testnet-refund/refund-observation.json','utf8')) as {txid:string;hex:string};
 const enc=new TextEncoder();

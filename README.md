@@ -12,6 +12,7 @@ from source assertions, and export reports that others can independently replay.
 - [Isolated examples](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html)
 - [Judge walkthrough](docs/07-judge-walkthrough.md)
 - [Real public-testnet experiment](docs/11-testnet-refund-regression.md)
+- [Completion and operations checklist](docs/13-finish-checklist.md)
 - [Current evidence contract and release verification](docs/12-release-readiness.md)
 
 The existing publication and repository are private. Arrange explicit reviewer
@@ -19,7 +20,7 @@ access before relying on either link for submission. Examples contain public tes
 transactions. The working workspace starts empty and never substitutes fixtures
 when an upstream request fails.
 
-## Current release: 1.0.0
+## Current release: 1.1.0
 
 | Capability | Implemented behavior |
 | --- | --- |
@@ -33,6 +34,9 @@ when an upstream request fails.
 | Block inclusion | Portable transaction Merkle path and serialized block-header hash checks; optional full-node collection |
 | Wallet context | Transaction-bound local wallet exports, including Ironwood; attachment excludes memos, keys and arbitrary wallet fields |
 | Export and replay | Signed report, original source, independent re-analysis, before/after comparison and redacted summary |
+| Case continuity | Explicit encrypted snapshots, encrypted file restore, unsaved-case protection and one-time verifier handoff |
+| Hosted admission | Persistent shared D1 budgets, fail-closed collection and Retry-After responses |
+| Key lifecycle | Signed key IDs, pinned rotation policy, retired/revoked keys and legacy receipt verification |
 | Compatibility | Existing case-review/1.1.0 and 1.2.0 reports replay through frozen implementations |
 
 A Merkle path proves membership in a supplied header. A collector receipt proves
@@ -64,7 +68,7 @@ npx playwright install --with-deps chromium
 npm run test:browser
 ```
 
-Mobile emulation does not replace physical-device testing. See the release
+Mobile emulation does not replace physical-device testing. See the completion checklist and release
 verification record for what has actually run in each environment.
 
 ## Real public-testnet experiment
@@ -101,6 +105,8 @@ local imports and replay but cannot supply the collector API.
 
 | Runtime variable | Purpose |
 | --- | --- |
+| COLLECTOR_RATE_SECRET | Random server-only HMAC secret for persistent request budgets |
+| COLLECTOR_KEY_ID | Active pinned key ID, currently veylens-2026-10 |
 | COLLECTOR_SIGNING_KEY | Existing pinned collector's PKCS8 Ed25519 key, as a runtime secret |
 | ONECLICK_API_KEY | Optional server-only provider bearer credential |
 | ZCASH_MAINNET_RPC_URL / ZCASH_MAINNET_RPC_AUTH | Optional mainnet full node and authorization |
@@ -158,6 +164,8 @@ MIT. See THIRD_PARTY_NOTICES.md for dependencies and upstream test material.
 
 The hosted app serves separate documents for Overview, Workspace, Compare, Verify, Demo lab, and Methodology. Each can be opened directly using its `.html` URL or its extensionless route. Mobile users get persistent main-page navigation, with all six destinations in the All pages menu. The demo uses the same navigation and has no live collection controls.
 
-The branded intro appears on the first entry to any page in a tab and on reload. Internal page navigation skips it for the rest of the session. Use Replay intro in the footer or desktop sidebar to show it again. Continue and Escape dismiss it, reduced motion is respected, and navigation stays accessible without JavaScript. Only the intro preference enters session storage. Imported evidence and comparison inputs remain in memory.
+The branded intro appears on the first entry to any page in a tab and on reload. Internal page navigation skips it for the rest of the session. Use Replay intro in the footer or desktop sidebar to show it again. Continue and Escape dismiss it, reduced motion is respected, and navigation stays accessible without JavaScript. Only the intro preference is stored automatically. Explicit verifier handoff temporarily uses session storage for at most two minutes and is consumed on arrival. Optional encrypted snapshots use local storage. Comparison inputs remain in memory.
 
 `npm run dev` builds the Worker and starts a development preview on port 4173 with no runtime credentials. Production collection needs its configured environment. `npm run test:browser` uses a separate loopback port for CI.
+
+Use Save or restore this case for explicit encrypted snapshots and portable encrypted files. Forgotten passphrases cannot be recovered. Open report in verifier transfers the current evidence and signed report within the same tab, then independently verifies them. No source is sent to a server by either operation. See docs/13-finish-checklist.md for limits, key rotation, source probes and remaining external tasks.

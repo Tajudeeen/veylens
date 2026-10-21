@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {collectTestnetExplorer} from '../src/server/testnetExplorer.js';
 import {inspectExplorerObservation} from '../src/observations.js';
-import {handleApi} from '../src/server/api.js';
+import {handleApi} from './helpers/collector.js';
 const row=JSON.parse(readFileSync('examples/testnet-refund/refund-observation.json','utf8')) as {txid:string;hex:string};
 function source(patch:Record<string,unknown>={},network='testnet'):typeof fetch{return async(input,init)=>{
  assert.equal(init?.redirect,'manual');const path=String(input);assert.ok(path.startsWith('https://api.testnet.zecblock.com/v1/transactions/'+row.txid));

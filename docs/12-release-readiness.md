@@ -1,4 +1,4 @@
-# Veylens 1.0 evidence and release contract
+# Veylens evidence contract and release verification
 
 ## What changed
 
@@ -75,10 +75,9 @@ tampering rejection, comparison, consent, failure handling and viewport overflow
 Its loopback server serves the exact Worker bundle and has no runtime credentials.
 No live provider calls run in the browser CI tests.
 
-Local browser QA in this managed workspace is unavailable because the required
-control-browser skill is not installed. Desktop and mobile browser execution passed in GitHub Actions run 39007112939 on 17 October 2026, after correcting a test assertion that assumed the order of two removed findings. Do not confuse simulated-DOM checks or
-browser-test discovery with browser execution. Record GitHub's actual run result
-separately. Physical-device QA remains outstanding.
+The current suite runs actual Chromium on desktop and a Pixel 7 viewport in GitHub Actions. It includes the six-page navigation, direct routes, intro, encrypted case recovery, verifier handoff and unsaved-case guard. A local managed preview also supports visual inspection, but its HTTP origin can lack browser Web Crypto. The loopback CI origin and HTTPS production are checked separately. Physical-device QA remains outstanding.
+
+The verification recorded below is historical. The v1.1 implementation and operational steps are in [the finish checklist](13-finish-checklist.md). Current execution status is the matching commit's [GitHub verification run](https://github.com/Tajudeeen/veylens/actions/workflows/verify.yml).
 
 ## Publication and access
 
@@ -108,3 +107,7 @@ and node capabilities without exposing secrets.
 - The runtime has no full node configured. Full-node proof collection therefore remains unavailable; portable proof import and its verification are implemented.
 
 - The shielded comparison was also re-collected, producing five authenticated transaction records. Its source replay succeeded, reuse was removed without losing authenticated coverage, and the result stayed insufficient. The deployed mainnet inspection endpoint also returned a valid pinned-key receipt for the historical reference transaction.
+
+## v1.1 continuity and collector protection
+
+Explicit AES-GCM snapshots and one-time verifier handoff preserve the local-analysis privacy model. Persistent D1 admission budgets fail closed. Receipt v2 adds signed key IDs under a verifier-pinned public trust policy, with retired-key replay, revocation and legacy receipt support. A source-health probe checks configured node responses and serialized tip-header hashing without claiming consensus. Follow docs/13-finish-checklist.md before rotating keys or enabling a node.

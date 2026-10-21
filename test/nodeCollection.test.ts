@@ -5,7 +5,7 @@ import {sha256} from '@noble/hashes/sha256';
 import {bytesOf,hexOf} from '../src/zcash.js';
 import {verifyBlockInclusion} from '../src/chain.js';
 import {collectInclusion} from '../src/server/node.js';
-import {handleApi} from '../src/server/api.js';
+import {handleApi} from './helpers/collector.js';
 const row=JSON.parse(readFileSync('test/fixtures/zcash/mainnet-inspection.json','utf8')).transactions[0] as {txid:string;hex:string};
 const header=new Uint8Array(1487);header[0]=4;header.set(bytesOf(row.txid).reverse(),36);header.set([253,64,5],140);
 const blockHash=hexOf(sha256(sha256(header)).reverse());
@@ -39,4 +39,13 @@ test('unconfigured inclusion endpoint fails explicitly without inventing a proof
  let calls=0;const transport:typeof fetch=async()=>{calls++;return Response.json({});};
  const response=await handleApi(new Request('https://veylens.test/api/zcash-inclusion',{method:'POST',headers:{Origin:'https://veylens.test','Content-Type':'application/json'},body:JSON.stringify({txid:row.txid,network:'mainnet'})}),{},transport);
  assert.equal(response.status,400);assert.equal(calls,0);assert.match((await response.json()).error,/configured full node/);
+});
+
+test('node readiness checks network, sync state and serialized tip while exposing no credentials',async()=>{
+ const {probeNode}=await import('../src/server/node.js');
+ const transport:typeof fetch=async(_input,init)=>{const body=JSON.parse(String(init?.body));return Response.json({result:body.method==='getblockchaininfo'?{chain:'main',blocks:100,bestblockhash:blockHash,initialblockdownload:false,verificationprogress:1}:body.method==='getblockhash'?blockHash:hexOf(header),error:null});};
+ const checked=await probeNode({url:'https://node.test',auth:'private-auth'},'mainnet',transport,AbortSignal.timeout(1000));assert.equal(checked.status,'checked-node-observation');assert.equal(checked.height,100);assert.ok(!JSON.stringify(checked).includes('private-auth'));assert.match(checked.notice,/not independently verified/);
+ await assert.rejects(probeNode({url:'https://node.test'},'testnet',transport,AbortSignal.timeout(1000)),/network/);
+ await assert.rejects(probeNode({url:'http://public-node.test'},'mainnet',transport,AbortSignal.timeout(1000)),/HTTPS/);
+ const unavailable=await handleApi(new Request('https://veylens.test/api/source-health',{method:'POST',headers:{Origin:'https://veylens.test','Content-Type':'application/json'},body:JSON.stringify({network:'testnet'})}),{});assert.equal((await unavailable.json()).status,'not-configured');
 });
