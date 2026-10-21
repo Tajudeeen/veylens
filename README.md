@@ -28,7 +28,7 @@ Vercel migration code is prepared. Publication is currently blocked by the
 connected account's missing access to the owner's Vercel team. The links above
 remain the working deployment until a checked Vercel URL replaces them.
 
-## Current release: 1.1.0
+## Current release: 1.1.1
 
 | Capability | Implemented behavior |
 | --- | --- |
@@ -54,7 +54,7 @@ assertions. Public shielded bytes do not identify the actual recipient.
 
 ## Reproduce the build
 
-Node.js 24 is used in CI. Node.js 22 or newer is supported by the application.
+Node.js 24 is pinned for installs, CI and Vercel deployment. `npm run build` compiles the application and generates the deployable web pages in `dist/client`. `npm run build:core` compiles TypeScript only.
 
 ```sh
 npm ci

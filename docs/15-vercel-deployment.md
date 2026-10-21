@@ -36,7 +36,7 @@ This endpoint deliberately returns no unauthenticated health information. An aut
 
 ## Vercel configuration
 
-Import `Tajudeeen/veylens` into the owner's team. `vercel.json` selects no framework, runs `npm ci` and `npm run build:web`, publishes `dist/client`, and sets a 30-second limit for API Functions. Choose Node.js 24. Do not change Git source visibility during import.
+Import `Tajudeeen/veylens` into the owner's team. `vercel.json` selects no framework, runs `npm ci` and `npm run build`, publishes `dist/client`, and sets a 30-second limit for API Functions. Choose Node.js 24. Do not change Git source visibility during import.
 
 Required server-only production variables:
 

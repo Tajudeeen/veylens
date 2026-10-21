@@ -1,29 +1,30 @@
 {
   "name": "veylens",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Privacy-leak auditor for Zcash shielded cross-chain transaction flows",
   "type": "module",
   "bin": {
     "veylens": "./dist/src/cli.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test --test-reporter=spec dist/test/*.test.js",
-    "build:web": "npm run build && node dist/src/web/build.js",
-    "audit:demo:leak": "npm run build && node dist/src/cli.js audit test/fixtures/zashi-crosspay-leak.json",
-    "audit:demo:html": "npm run build && node dist/src/cli.js audit test/fixtures/zashi-crosspay-leak.json --html",
-    "audit:demo:clean": "npm run build && node dist/src/cli.js audit test/fixtures/clean-flow.json",
+    "build": "npm run build:core && node dist/src/web/build.js",
+    "test": "npm run build:core && node --test --test-reporter=spec dist/test/*.test.js",
+    "build:web": "npm run build",
+    "audit:demo:leak": "npm run build:core && node dist/src/cli.js audit test/fixtures/zashi-crosspay-leak.json",
+    "audit:demo:html": "npm run build:core && node dist/src/cli.js audit test/fixtures/zashi-crosspay-leak.json --html",
+    "audit:demo:clean": "npm run build:core && node dist/src/cli.js audit test/fixtures/clean-flow.json",
     "evidence:capture": "node scripts/capture-dry-quote.mjs",
-    "zcash:capture": "npm run build && node scripts/capture-zcash.mjs",
+    "zcash:capture": "npm run build:core && node scripts/capture-zcash.mjs",
     "test:browser": "playwright test",
-    "capture:case": "npm run build && node scripts/capture-case.mjs",
+    "capture:case": "npm run build:core && node scripts/capture-case.mjs",
     "check:submission": "npm run build && node scripts/check-submission.mjs",
     "dev": "npm run build:web && node scripts/serve-dev.mjs",
     "db:generate": "drizzle-kit generate",
-    "check:deployment": "npm run build && node scripts/check-deployment.mjs",
-    "collector:keygen": "npm run build && node scripts/collector-keygen.mjs",
+    "check:deployment": "npm run build:core && node scripts/check-deployment.mjs",
+    "collector:keygen": "npm run build:core && node scripts/collector-keygen.mjs",
     "check:dependencies": "npm audit --audit-level=moderate",
-    "build:budget": "node scripts/build-budget.mjs"
+    "build:budget": "node scripts/build-budget.mjs",
+    "build:core": "tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",
@@ -37,7 +38,7 @@
     "drizzle-orm": "0.45.2"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": "24.x"
   },
   "dependencies": {
     "@defuse-protocol/one-click-sdk-typescript": "0.1.26",
