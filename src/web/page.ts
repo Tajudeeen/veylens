@@ -402,6 +402,18 @@ th,td{text-align:left;vertical-align:top;padding:1rem;border-bottom:1px solid va
 th{color:var(--gold)}
 .methodology{max-width:58rem;padding-bottom:3rem}
 .methodology h2{margin-top:2.5rem}
+.source-gallery{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:1.25rem;align-items:start;margin:1.5rem 0 2.5rem}
+.source-figure{min-width:0;margin:0;overflow:hidden;border:1px solid #354637;border-radius:16px;background:#111d14}
+.source-screenshot{position:relative;display:block;background:#f8f8f8;line-height:0;overflow:hidden}
+.source-screenshot img{display:block;width:100%;height:auto;max-width:100%;margin:0}
+.source-open{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#19291c;color:#e3cf96;font-size:11px;line-height:1.5}
+.source-screenshot:hover .source-open{background:#243925}
+.source-screenshot:focus-visible{outline:3px solid #d9c387;outline-offset:-3px}
+.source-figure figcaption{padding:16px 18px}
+.source-kicker{font:10px/1.5 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#c0cfb9}
+.source-figure figcaption p{font-size:12px;line-height:1.7;margin:8px 0 0;color:#9bb19b}
+@media(max-width:720px){.source-gallery{grid-template-columns:minmax(0,1fr);gap:18px}.source-figure figcaption{padding:14px 16px}}
+
 @media(min-width:48rem){.mobile-menu{display:none}.workflow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 `;
   const frame = (file: string, title: string, content: string, splash = false): string => {
@@ -437,6 +449,10 @@ ${section("rules")}
 <h2>Interpret findings carefully</h2><p>Refund reuse identifies matching address strings in a declared sequence. A transparent-hop finding depends on supplied events and its optional reason. Timing uses a 120-second heuristic, without measuring an anonymity set, comparing asset values, or proving public observability. Turnstile exposure uses a supplied flag, rather than decoding a migration transaction.</p><p>“Insufficient evidence” means chain evidence is incomplete, regardless of whether a configuration risk matched. A high-severity result refers to the declared source/destination relationship and is still not a verified on-chain leak. The original flow path also returns insufficient evidence when no high finding matches.</p>
 <h2>Privacy of the tool</h2><p>The application bundle has a default-deny content policy and no network access for analysis. Navigation and ordinary hosting requests still reach the host. Flow data is not sent by the application. Downloads contain findings, event identifiers, and the flow identifier. Review those before sharing. The intro preference uses session storage. An explicit verifier handoff keeps source and report in this tab for at most two minutes and is consumed on arrival. Optional local case snapshots use passphrase encryption. No evidence is saved automatically.</p>
 <h2>Historical case and source status</h2><p>The earlier build cites a reported CrossPay refund issue. This release preserves its fixture for reproducibility but does not claim the original vulnerability remains open. The historical report is a research lead, not independently verified chain evidence.</p><p><a href="${ARTICLE_URL}" rel="noopener noreferrer">Historical report cited by the original build</a></p>
+<div class="source-gallery" aria-label="Screenshots from the historical report">
+<figure class="source-figure"><a class="source-screenshot" href="/methodology/cryptopolitan-disclosure.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the Cryptopolitan article screenshot at full size, in a new tab"><img src="/methodology/cryptopolitan-disclosure.jpg" width="1518" height="1536" loading="lazy" decoding="async" alt="Cryptopolitan headline about ZachXBT's reported Zashi and NEAR Intents privacy flaw, published 21 October 2025 and updated 6 May 2026."><span class="source-open">Open full size <span aria-hidden="true">↗</span></span></a><figcaption><span class="source-kicker">01 / The report</span><p>Cryptopolitan’s coverage of the disclosure.</p></figcaption></figure>
+<figure class="source-figure"><a class="source-screenshot" href="/methodology/zachxbt-refund-flow.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the reported refund-flow diagram at full size, in a new tab"><img src="/methodology/zachxbt-refund-flow.jpg" width="1536" height="924" loading="lazy" decoding="async" alt="Reported flow from Solana through NEAR Intents to Zcash, shielding, a subsequent swap, and a bridge refund to a public transparent address."><span class="source-open">Open full size <span aria-hidden="true">↗</span></span></a><figcaption><span class="source-kicker">02 / The reported flow</span><p>Illustration credited to ZachXBT in the report.</p></figcaption></figure>
+</div>
 <h2>Official technical resources</h2><ul><li><a href="https://github.com/zcash/librustzcash" rel="noopener noreferrer">librustzcash source</a></li><li><a href="https://github.com/ZcashFoundation/zebra" rel="noopener noreferrer">Zebra source</a></li><li><a href="https://docs.near-intents.org/" rel="noopener noreferrer">NEAR Intents documentation</a></li></ul>
 <h2>Next evidence milestone</h2><p>Zcash transaction bundles now import with raw identifier checks, exact transparent outputs, and source-digest replay. Next are independently anchored chain records, wallet evidence, and an attributed real refund example. The signed dry quote authenticates configuration only.</p><a class="btn btn-primary" href="workspace.html">Open workspace</a></div>`;
   return {
