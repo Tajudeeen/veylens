@@ -13,7 +13,7 @@
 
 ## Runtime setup
 
-Sites provisions the logical `DB` binding from the hosting manifest and applies the generated, append-only Drizzle migration. This table stores only rate-window HMAC digests, usage and expiry. It stores no raw IP addresses, transaction identifiers or evidence. Expired rows are pruned on subsequent allowed requests. Counters are admission controls, not a substitute for platform DDoS protection.
+Sites provisions the logical `DB` binding from the hosting manifest using `"d1": "DB"` and applies the generated, append-only Drizzle migration. This table stores only rate-window HMAC digests, usage and expiry. It stores no raw IP addresses, transaction identifiers or evidence. Expired rows are pruned on subsequent allowed requests. Counters are admission controls, not a substitute for platform DDoS protection.
 
 `COLLECTOR_RATE_SECRET` must be a random secret of at least 32 characters. Keep `COLLECTOR_SIGNING_KEY` unchanged for the existing pinned key. Set `COLLECTOR_KEY_ID=veylens-2026-10`. Other runtime secrets are preserved.
 

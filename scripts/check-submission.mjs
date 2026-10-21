@@ -13,5 +13,5 @@ assert.equal(results[0].overallResult,'fail');assert.equal(results[1].overallRes
 for(const name of ['index','workspace','compare','verify','methodology','demo'])assert.ok(existsSync(`dist/client/${name}.html`),`Build web output first: ${name}`);
 assert.equal(JSON.parse(readFileSync('package.json','utf8')).version,APP_VERSION);
 const workspace=readFileSync('dist/client/workspace.html','utf8');for(const id of ['save-local','unlock-local','vault-file','open-verifier','probe-node'])assert.ok(workspace.includes(`id="${id}"`));
-assert.equal(JSON.parse(readFileSync('.openai/hosting.json','utf8')).d1.binding,'DB');assert.ok(existsSync('drizzle/meta/_journal.json'));
+assert.equal(JSON.parse(readFileSync('.openai/hosting.json','utf8')).d1,'DB');assert.ok(existsSync('drizzle/meta/_journal.json'));
 console.log(JSON.stringify({version:JSON.parse(readFileSync('package.json','utf8')).version,checks:{realTestnetRegression:true,reportIntegrity:true,independentReplay:true,correctedCaseComparison:true,webArtifacts:true},externalEvidenceStillRequired:['Attributed live provider refund','Authenticated shielded delivery and ownership','Independent consensus validation'],notice:'Passing executable submission checks does not certify complete evidence or reviewer access.'},null,2));
