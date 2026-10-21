@@ -22,6 +22,7 @@ function load(file: string, query = ""): JSDOM {
       Object.defineProperty(w, "crypto", { value: webcrypto });
       Object.defineProperty(w, "TextEncoder", { value: TextEncoder });
       w.sessionStorage.setItem("veylens-splash-seen", "1");
+      w.sessionStorage.setItem("veylens-intro-v2-seen", "1");
     },
   });
 }
@@ -32,8 +33,8 @@ async function until(check: () => boolean): Promise<void> {
   }
   assert.fail("Page did not finish its operation");
 }
-test("four distinct documents, landing CTA targets workspace, no audit controls on landing", () => {
-  assert.deepEqual(Object.keys(pages), ["index.html", "workspace.html", "verify.html", "methodology.html"]);
+test("six distinct documents, landing CTA targets workspace, no audit controls on landing", () => {
+  assert.deepEqual(Object.keys(pages), ["index.html", "workspace.html", "compare.html", "verify.html", "methodology.html", "demo.html"]);
   const home = load("index.html");
   assert.equal(home.window.document.getElementById("flow-input"), null);
   assert.ok(home.window.document.querySelector('a.btn-primary[href="workspace.html"]'));
@@ -99,4 +100,14 @@ test("methodology states missing integrations rather than implying live verifica
   assert.match(text, /Insufficient evidence/);
   assert.match(text, /does not establish that every submission must integrate all/);
   dom.window.close();
+});
+
+test("direct entry has the branded intro on every route and replay restores focus", () => {
+ for(const [file,html] of Object.entries(pages)){
+  const dom=new JSDOM(html,{url:`https://veylens.test/${file}`,runScripts:"dangerously",pretendToBeVisual:true,beforeParse(w){Object.defineProperty(w,"crypto",{value:webcrypto});Object.defineProperty(w,"TextEncoder",{value:TextEncoder});Object.defineProperty(w,"matchMedia",{value:()=>({matches:true})});}});
+  const doc=dom.window.document;
+  assert.ok(doc.getElementById("splash"),file);assert.ok(doc.querySelector(".vl-app[inert],.vl-landing[inert]"),file);
+  doc.getElementById("intro-skip")!.click();assert.equal(doc.getElementById("splash"),null);assert.equal(doc.activeElement?.tagName,"H1");
+  const replay=doc.querySelector<HTMLButtonElement>("footer [data-replay-intro]")!;replay.click();assert.ok(doc.getElementById("splash"));doc.getElementById("intro-skip")!.click();assert.equal(doc.activeElement,replay,file);assert.equal(doc.querySelector("[inert]"),null);dom.window.close();
+ }
 });

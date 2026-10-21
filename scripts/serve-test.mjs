@@ -1,7 +1,8 @@
-// CI-only loopback server for the exact bundled Worker. No runtime credentials.
+// Exact bundled Worker for loopback tests or the managed preview. No runtime credentials.
 import {createServer} from 'node:http';
 import worker from '../dist/server/index.js';
-const host='127.0.0.1',port=4175;
+const preview=process.env.VEYLENS_PREVIEW==='1';
+const host=preview?'0.0.0.0':'127.0.0.1',port=preview?4173:4175;
 const server=createServer(async(req,res)=>{
  try{
   let size=0;const parts=[];for await(const part of req){size+=part.length;if(size>2_000_000){res.writeHead(413);res.end();return;}parts.push(part);}

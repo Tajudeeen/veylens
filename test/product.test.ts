@@ -55,3 +55,19 @@ test('wallet attachment excludes secrets and remains bound to the imported real 
  const source=JSON.parse((doc.getElementById('flow-input') as HTMLTextAreaElement).value);assert.equal(source.walletEvidence[0].txid,input.refundTxid);assert.ok(!JSON.stringify(source).includes('never-include'));
  assert.match(doc.getElementById('intake-status')!.textContent!,/Ownership and delivery remain unverified/);dom.window.close();
 });
+
+test('dedicated comparison reviews both local cases and rejects stale or invalid replacements',async()=>{
+ const page=readFileSync('dist/client/compare.html','utf8');let calls=0;
+ const dom=new JSDOM(page,{url:'https://veylens.test/compare.html',runScripts:'dangerously',beforeParse(w){Object.defineProperty(w,'crypto',{value:webcrypto});Object.assign(w,{TextEncoder,fetch:async()=>{calls++;throw new Error('Unexpected collection');},structuredClone});w.sessionStorage.setItem('veylens-intro-v2-seen','1');}});
+ const doc=dom.window.document;
+ const attach=(id:string,raw:unknown)=>{const text=JSON.stringify(raw);Object.defineProperty(doc.getElementById(id),'files',{value:[{size:text.length,text:async()=>text}],configurable:true});doc.getElementById(id)!.dispatchEvent(new dom.window.Event('change'));};
+ const wait=async(check:()=>boolean)=>{for(let i=0;i<100;i++){if(check())return;await new Promise(r=>setTimeout(r,10));}assert.fail('Comparison did not finish.');};
+ attach('compare-before',JSON.parse(readFileSync('examples/testnet-refund/vulnerable.case.json','utf8')));attach('compare-after',JSON.parse(readFileSync('examples/testnet-refund/corrected.case.json','utf8')));
+ await wait(()=>!(doc.getElementById('compare-run') as HTMLButtonElement).disabled);doc.getElementById('compare-run')!.click();
+ assert.match(doc.getElementById('compare-removed')!.textContent!,/public-source-address-reuse/);assert.equal(calls,0);
+ attach('compare-after',{});await wait(()=>doc.getElementById('compare-after-status')!.dataset.state==='bad');
+ assert.ok((doc.getElementById('compare-run') as HTMLButtonElement).disabled);assert.ok(doc.getElementById('comparison-output')!.hidden);
+ // A file read completing after Clear must not restore discarded results.
+ let resolve!:(text:string)=>void;const pending=new Promise<string>(r=>{resolve=r;});Object.defineProperty(doc.getElementById('compare-after'),'files',{value:[{size:1000,text:()=>pending}],configurable:true});doc.getElementById('compare-after')!.dispatchEvent(new dom.window.Event('change'));doc.getElementById('compare-clear')!.click();resolve(readFileSync('examples/testnet-refund/corrected.case.json','utf8'));
+ await new Promise(r=>setTimeout(r,80));assert.equal(doc.getElementById('compare-after-status')!.textContent,'No case attached.');assert.ok((doc.getElementById('compare-run') as HTMLButtonElement).disabled);dom.window.close();
+});

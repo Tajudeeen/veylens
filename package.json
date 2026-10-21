@@ -17,7 +17,8 @@
     "zcash:capture": "npm run build && node scripts/capture-zcash.mjs",
     "test:browser": "playwright test",
     "capture:case": "npm run build && node scripts/capture-case.mjs",
-    "check:submission": "npm run build && node scripts/check-submission.mjs"
+    "check:submission": "npm run build && node scripts/check-submission.mjs",
+    "dev": "npm run build:web && node scripts/serve-dev.mjs"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

@@ -1,3 +1,4 @@
+import { comparisonView } from "./comparisonView.js";
 import { createHash } from "node:crypto";
 import { BRAND } from "../brand.js";
 import {chrome,landing as renderLanding,mark,DESIGN_CSS} from "./design.js";
@@ -412,7 +413,7 @@ th{color:var(--gold)}
       .replace('</style>', `${extraCss}${DESIGN_CSS}</style>`)
       .replace('img-src data:', 'img-src &#39;self&#39; data:')
       .replace(/<link rel="icon"[^>]*>/, '<link rel="icon" href="brand-mark.png" type="image/png">')
-      .replace(/<body class="is-splashing">[\s\S]*?<script>/, `<body${splash ? ' class="is-splashing"' : ''}>${body}<noscript><p class="shell fine">Reading and navigation work without JavaScript. Audits and signature verification require JavaScript, or the CLI.</p></noscript><script>`);
+      .replace(/<body class="is-splashing">[\s\S]*?<script>/, `<body class="is-splashing">${body}<noscript><p class="shell fine">Reading and navigation work without JavaScript. Audits and signature verification require JavaScript, or the CLI.</p></noscript><script>`);
   };
   const intro = (label: string, title: string, text: string): string => `<div class="shell page-intro"><p class="eyebrow">${label}</p><h1>${title}</h1><p class="lede">${text}</p></div>`;
   const landing=renderLanding();
@@ -441,7 +442,9 @@ ${section("rules")}
   return {
     "index.html": frame("index.html", "Overview", landing, true),
     "workspace.html": frame("workspace.html", "Workspace", workspace),
+    "compare.html": frame("compare.html", "Compare", comparisonView()),
     "verify.html": frame("verify.html", "Verify report", verifier),
     "methodology.html": frame("methodology.html", "Methodology", methodology),
+    "demo.html": frame("demo.html", "Demo lab", intro("Demo lab / Supplied examples", "Inspect a sample. Learn the limits.", "Try illustrative flows, a signed dry quote or a historical transaction. Samples are separate from your live workspace.") + '<p class="notice shell">Sample findings describe their supplied evidence. They do not establish a live vulnerability. <a href="workspace.html">Open an empty workspace</a>.</p>' + audit.replace('workspace-section','workspace-section demo-workspace')),
   };
 }

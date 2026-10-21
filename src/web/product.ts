@@ -1,3 +1,4 @@
+import {initComparison} from './comparison.js';
 import {reviewCase,compareCaseReports} from '../case.js';
 import {inspectWalletExport,sanitizeWalletExport} from '../wallet.js';
 import {loadInput} from './app.js';
@@ -119,3 +120,5 @@ get('wallet-file')?.addEventListener('change',async event=>{
  const result=await reviewCase(candidate);if(!result.ok)throw new Error(result.errors.join(' '));if(revision!==caseRevision)return;draft=candidate;showDraft(true);status('Wallet export attached locally to its transaction. Memos and keys were excluded. Ownership and delivery remain unverified.');
  }catch(e){status(e instanceof Error?e.message:'Invalid wallet export.');}
 });
+
+initComparison();

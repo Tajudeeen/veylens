@@ -4,6 +4,10 @@ Review Zcash integration refund paths using original provider records and raw
 transaction evidence. Detect public address reuse, distinguish checked evidence
 from source assertions, and export reports that others can independently replay.
 
+- [Overview](https://veylens-privacy-workspace.deeen-code.chatgpt.site/)
+- [Compare cases](https://veylens-privacy-workspace.deeen-code.chatgpt.site/compare.html)
+- [Verify reports](https://veylens-privacy-workspace.deeen-code.chatgpt.site/verify.html)
+- [Methodology](https://veylens-privacy-workspace.deeen-code.chatgpt.site/methodology.html)
 - [Workspace](https://veylens-privacy-workspace.deeen-code.chatgpt.site/workspace.html)
 - [Isolated examples](https://veylens-privacy-workspace.deeen-code.chatgpt.site/demo.html)
 - [Judge walkthrough](docs/07-judge-walkthrough.md)
@@ -149,3 +153,11 @@ the current release contract takes precedence.
 ## License
 
 MIT. See THIRD_PARTY_NOTICES.md for dependencies and upstream test material.
+
+## Page navigation and intro
+
+The hosted app serves separate documents for Overview, Workspace, Compare, Verify, Demo lab, and Methodology. Each can be opened directly using its `.html` URL or its extensionless route. Mobile users get persistent main-page navigation, with all six destinations in the All pages menu. The demo uses the same navigation and has no live collection controls.
+
+The branded intro appears on the first entry to any page in a tab and on reload. Internal page navigation skips it for the rest of the session. Use Replay intro in the footer or desktop sidebar to show it again. Continue and Escape dismiss it, reduced motion is respected, and navigation stays accessible without JavaScript. Only the intro preference enters session storage. Imported evidence and comparison inputs remain in memory.
+
+`npm run dev` builds the Worker and starts a development preview on port 4173 with no runtime credentials. Production collection needs its configured environment. `npm run test:browser` uses a separate loopback port for CI.

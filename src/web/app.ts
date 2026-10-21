@@ -33,46 +33,41 @@ function sessionSet(key: string, value: string): void {
 }
 
 export function initSplash(doc: Document): void {
-  const splash = doc.getElementById("splash");
-  const behind = ["main", "site-header", "site-footer", "skip-link"]
-    .map((k) => doc.getElementById(k) ?? doc.querySelector(`.${k}`))
-    .filter((n): n is Element => n !== null);
-  const release = (): void => {
-    doc.body.classList.remove("is-splashing");
-    for (const n of behind) n.removeAttribute("inert");
+  const initial=doc.getElementById("splash");
+  const modern=initial?.dataset["intro"]==="2";
+  const key=modern?"veylens-intro-v2-seen":SPLASH_KEY;
+  const behind=modern?[...doc.querySelectorAll<HTMLElement>(".vl-app,.vl-landing")]:["main","site-header","site-footer","skip-link"].map(k=>doc.getElementById(k)??doc.querySelector(`.${k}`)).filter((n):n is HTMLElement=>n!==null);
+  const release=():void=>{doc.body.classList.remove("is-splashing");for(const n of behind)n.removeAttribute("inert");};
+  if(!initial){release();return;}
+  const template=initial.cloneNode(true) as HTMLElement;
+  let active:HTMLElement|null=null;
+  let finishActive:()=>void=()=>{};
+  let returnFocus:HTMLElement|null=null;
+  const open=(splash:HTMLElement,replay=false):void=>{
+    active=splash;doc.body.classList.add("is-splashing");for(const n of behind)n.setAttribute("inert","");
+    const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches===true;
+    let finished=false;
+    const previous=doc.activeElement instanceof HTMLElement?doc.activeElement:null;
+    const finish=():void=>{
+      if(finished)return;finished=true;window.clearTimeout(timer);sessionSet(key,"1");release();active=null;
+      doc.removeEventListener("keydown",onKey);
+      if(reduced)splash.remove();else{splash.classList.add("is-leaving");window.setTimeout(()=>splash.remove(),260);}
+      if(modern){const target=replay?returnFocus??previous:doc.querySelector<HTMLElement>("h1");if(target){if(!target.hasAttribute("tabindex")&&target.tagName!=="BUTTON")target.setAttribute("tabindex","-1");target.focus({preventScroll:true});}}
+    };
+    const onKey=(event:KeyboardEvent):void=>{
+      if(!modern||event.key==="Escape"||event.key==="Enter"){event.preventDefault();finish();}
+      else if(event.key==="Tab"){event.preventDefault();splash.querySelector<HTMLElement>("button")?.focus();}
+    };
+    const timer=window.setTimeout(finish,reduced?SPLASH_REDUCED_MS:modern?1600:SPLASH_MS);
+    finishActive=finish;splash.addEventListener("click",finish);doc.addEventListener("keydown",onKey);
+    if(modern)splash.querySelector<HTMLElement>("button")?.focus({preventScroll:true});
   };
-
-  if (!splash) {
-    release();
-    return;
-  }
-  if (sessionGet(SPLASH_KEY)) {
-    splash.remove();
-    release();
-    return;
-  }
-
-  for (const n of behind) n.setAttribute("inert", "");
-  const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
-  let finished = false;
-
-  const finish = (): void => {
-    if (finished) return;
-    finished = true;
-    sessionSet(SPLASH_KEY, "1");
-    release();
-    if (reduced) {
-      splash.remove();
-      return;
-    }
-    splash.classList.add("is-leaving");
-    window.setTimeout(() => splash.remove(), 260);
-  };
-
-  window.setTimeout(finish, reduced ? SPLASH_REDUCED_MS : SPLASH_MS);
-  splash.addEventListener("click", finish);
-  doc.addEventListener("keydown", finish, { once: true });
-  doc.addEventListener("touchstart", finish, { once: true, passive: true });
+  const navigation=window.performance?.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming|undefined;
+  if(sessionGet(key)&&!(modern&&navigation?.type==="reload")){initial.remove();release();}else open(initial);
+  for(const replay of doc.querySelectorAll<HTMLElement>("[data-replay-intro]"))replay.addEventListener("click",()=>{
+    if(active){finishActive();return;}
+    returnFocus=replay;const splash=template.cloneNode(true) as HTMLElement;doc.body.prepend(splash);open(splash,true);
+  });
 }
 
 type Child = Node | string;
