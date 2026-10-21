@@ -59,14 +59,16 @@ test('visual identity and navigation work across overview and investigation page
 });
 
 test('branded splash works on direct workspace entry, reload, and replay with safe focus',async({page},testInfo)=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});
  await page.addInitScript(()=>sessionStorage.removeItem('veylens-intro-v2-seen'));
  await page.goto('/workspace');
  await expect(page.getByRole('dialog')).toBeVisible();await expect(page.locator('.vl-app')).toHaveAttribute('inert','');
  await expect.poll(()=>page.locator('#splash img').evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
  await page.screenshot({path:testInfo.outputPath('splash.png'),animations:'disabled'});
- await page.getByRole('button',{name:'Continue',exact:true}).click();await expect(page.locator('#splash')).toHaveCount(0);
+ await expect(page.locator('#splash')).toHaveCount(0);
  await expect(page.locator('h1')).toBeFocused();await expect(page.locator('.vl-app')).not.toHaveAttribute('inert','');
- const replay=page.locator('[data-replay-intro]:visible').first();await replay.click();await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(replay).toBeFocused();
+ const replay=page.locator('[data-replay-intro]:visible').first();await replay.click();await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('#splash')).toHaveCount(0);await expect(replay).toBeFocused();
+ await replay.click();await page.getByRole('button',{name:'Continue',exact:true}).click();await expect(page.locator('#splash')).toHaveCount(0);await expect(replay).toBeFocused();
  await page.reload();await expect(page.getByRole('dialog')).toBeVisible();await page.getByRole('button',{name:'Continue',exact:true}).click();
 });
 test('dedicated comparison page independently reviews files and invalidates replaced evidence',async({page},testInfo)=>{
@@ -87,6 +89,7 @@ test('main page links navigate distinct documents and demo retains the shared na
  await nav.getByRole('link',{name:'Compare',exact:true}).click();await expect(page).toHaveURL(/compare.html$/);await expect(page.locator('h1')).toHaveText('What did the correction change?');
  await page.goBack();await expect(page).toHaveURL(/workspace$/);await expect(page.locator('h1')).toHaveText('Trace the refund.');
  await page.goto('/demo');
+ await page.locator('#load-leak').click();await page.locator('#run').click();await expect(page.locator('#r-verdict')).toHaveText('Failed');await expect(page.locator('#r-signed')).not.toHaveValue('');
  if(await page.locator('.mobile-menu').isVisible())await page.locator('.mobile-menu summary').click();
  const demoNav=page.viewportSize().width<1024?page.getByRole('navigation',{name:'All pages'}):page.getByRole('navigation',{name:'Primary'});
  await demoNav.getByRole('link',{name:'Workspace',exact:true}).click();await expect(page).toHaveURL(/workspace.html$/);await expect(page.locator('#flow-input')).toHaveValue('');
