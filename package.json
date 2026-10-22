@@ -43,7 +43,7 @@
   "dependencies": {
     "@defuse-protocol/one-click-sdk-typescript": "0.1.26",
     "@noble/hashes": "1.8.0",
-    "@scure/base": "1.2.6"
+    "@scure/base": "2.4.0"
   },
   "overrides": {
     "@esbuild-kit/core-utils": {
