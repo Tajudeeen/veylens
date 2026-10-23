@@ -34,3 +34,40 @@ test('captured deployed collector receipt authenticates real mainnet bytes and r
 test('comparison warns when a removed reuse finding coincides with missing source records',async()=>{
  const original=controlledCase();const incomplete={...original,transactions:original.transactions.slice(1)};const a=await reviewCase(original),b=await reviewCase(incomplete);assert.ok(a.ok&&b.ok);const diff=compareCaseReports(a.report,b.report);assert.ok(diff.removed.some(r=>r.includes('reuse')));assert.ok(diff.evidenceWarnings.some(g=>g.includes('fewer raw transaction')));assert.ok(diff.evidenceWarnings.some(g=>g.includes('previous-output')));
 });
+
+test('comparison detects stripped observation receipts even when all transaction bytes remain',async()=>{
+ const original=JSON.parse(readFileSync('examples/testnet-refund/collector-vulnerable.case.json','utf8'));
+ const stripped=structuredClone(original);
+ for(const row of stripped.transactions)delete row.observationReceipt;
+ const before=await reviewCase(original),after=await reviewCase(stripped);
+ assert.ok(before.ok&&after.ok);
+ const diff=compareCaseReports(before.report,after.report);
+ assert.ok(diff.evidenceWarnings.some(w=>w.includes('fewer collector-authenticated public source observations')));
+ assert.ok(!diff.evidenceWarnings.some(w=>w.includes('fewer raw transaction')));
+ assert.equal(before.report.findings.length,after.report.findings.length);
+ assert.equal(compareCaseReports(before.report,before.report).evidenceWarnings.length,0);
+});
+
+test('comparison detects removal of public source observations without removing transactions',async()=>{
+ const original=JSON.parse(readFileSync('examples/testnet-refund/collector-vulnerable.case.json','utf8'));
+ const stripped=structuredClone(original);
+ for(const row of stripped.transactions){delete row.observation;delete row.observationReceipt;}
+ const before=await reviewCase(original),after=await reviewCase(stripped);
+ assert.ok(before.ok&&after.ok);
+ assert.ok(compareCaseReports(before.report,after.report).evidenceWarnings.some(w=>w.includes('fewer public source observations')));
+});
+
+test('comparison distinguishes node and provider authentication from unchanged content counts',()=>{
+ const before={findings:[],evidence:{gaps:[],quoteSignature:'valid',facts:[
+  {path:'case.chainEvidence',value:'1 Merkle proofs, 1 authenticated node observations, 0 public source observations'},
+  {path:'case.providerOrigin',value:'Collector-authenticated status observation',trust:'pinned-collector-signature'},
+ ]}};
+ const after=structuredClone(before);
+ after.evidence.facts[0]!.value='1 Merkle proofs, 0 authenticated node observations, 0 public source observations';
+ after.evidence.facts[1]!.value='Imported provider record; outer status not authenticated';
+ after.evidence.facts[1]!.trust='unverified-import';
+ const diff=compareCaseReports(before,after);
+ assert.ok(diff.evidenceWarnings.some(w=>w.includes('node inclusion observations')));
+ assert.ok(diff.evidenceWarnings.some(w=>w.includes('provider status observation')));
+ assert.ok(!diff.evidenceWarnings.some(w=>w.includes('fewer verified Merkle')));
+});
