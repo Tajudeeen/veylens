@@ -103,7 +103,7 @@ export async function reviewCase(raw:unknown,now=Math.floor(Date.now()/1000)):Pr
  evidence.format='veylens-case-report/1';evidence.inputDigest=await digestInput(raw);evidence.gaps=[...new Set(evidence.gaps)];evidence.scope='Combined refund-path review: authenticated configuration, checked public relationships and explicit attribution boundaries';
  report.rulesetVersion='case-review/1.3.0';report.overallResult=report.findings.some(f=>f.severity==='high')?'fail':'insufficient';return {ok:true,report};
 }
-export function compareCaseReports(before:{findings:Array<{ruleId:string;severity:string}>;evidence?:{gaps:string[];facts:Array<{path:string;value:string}>;quoteSignature?:string}},after:{findings:Array<{ruleId:string;severity:string}>;evidence?:{gaps:string[];facts:Array<{path:string;value:string}>;quoteSignature?:string}}):{removed:string[];added:string[];remaining:string[];evidenceWarnings:string[];notice:string}{
+export function compareCaseReports(before:{findings:Array<{ruleId:string;severity:string}>;evidence?:{gaps:string[];facts:Array<{path:string;value:string;trust?:string}>;quoteSignature?:string}},after:{findings:Array<{ruleId:string;severity:string}>;evidence?:{gaps:string[];facts:Array<{path:string;value:string;trust?:string}>;quoteSignature?:string}}):{removed:string[];added:string[];remaining:string[];evidenceWarnings:string[];notice:string}{
  const a=new Set(before.findings.map(f=>f.ruleId)),b=new Set(after.findings.map(f=>f.ruleId));
  const evidenceWarnings=(after.evidence?.gaps??[]).filter(g=>!(before.evidence?.gaps??[]).includes(g));
  if(before.evidence?.quoteSignature==='valid'&&after.evidence?.quoteSignature!=='valid')evidenceWarnings.push('The corrected case no longer has authenticated quote configuration.');
@@ -113,6 +113,14 @@ export function compareCaseReports(before:{findings:Array<{ruleId:string;severit
  if(authenticated(after)<authenticated(before))evidenceWarnings.push('The corrected case has fewer collector-authenticated transaction observations.');
  const proofs=(report:typeof before)=>Number.parseInt(fact(report,'case.chainEvidence')??'0',10);
  if(proofs(after)<proofs(before))evidenceWarnings.push('The corrected case has fewer verified Merkle inclusion proofs.');
+ const authenticatedInclusions=(report:typeof before)=>Number.parseInt(fact(report,'case.chainEvidence')?.match(/, (\d+) authenticated node observations/)?.[1]??'0',10);
+ if(authenticatedInclusions(after)<authenticatedInclusions(before))evidenceWarnings.push('The corrected case has fewer collector-authenticated node inclusion observations. The same number of Merkle proofs does not preserve source authentication.');
+ const observations=(report:typeof before)=>report.evidence?.facts.filter(f=>f.path.startsWith('observation.'))??[];
+ if(observations(after).length<observations(before).length)evidenceWarnings.push('The corrected case has fewer public source observations. Removing a source observation does not establish a correction.');
+ const authenticatedObservations=(report:typeof before)=>observations(report).filter(f=>f.trust==='pinned-collector-signature; source-membership-observation').length;
+ if(authenticatedObservations(after)<authenticatedObservations(before))evidenceWarnings.push('The corrected case has fewer collector-authenticated public source observations. Imported observations do not provide equivalent authentication.');
+ const providerAuthenticated=(report:typeof before)=>report.evidence?.facts.some(f=>f.path==='case.providerOrigin'&&f.trust==='pinned-collector-signature')??false;
+ if(providerAuthenticated(before)&&!providerAuthenticated(after))evidenceWarnings.push('The corrected case no longer has a collector-authenticated provider status observation. A signed quote alone does not authenticate the outer status.');
  const count=(report:typeof before)=>Number.parseInt(report.evidence?.facts.find(f=>f.path==='case.rawRecords')?.value??'0',10);
  if(count(after)<count(before))evidenceWarnings.push('The corrected case contains fewer raw transaction records. Missing evidence can remove findings.');
  return {removed:[...a].filter(r=>!b.has(r)),added:[...b].filter(r=>!a.has(r)),remaining:[...b].filter(r=>a.has(r)),evidenceWarnings,notice:'Comparison covers the supplied cases only. Missing findings do not establish privacy or equivalent evidence coverage.'};

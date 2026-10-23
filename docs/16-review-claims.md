@@ -20,3 +20,9 @@ The published $600M–$700M figure is reported route volume, not a measurement p
 As checked on October 21, 2026, Zakura's [one-time IVK README](https://github.com/zakura-core/wallet-libraries/blob/main/zakura/one-time-ivk/README.md) describes a draft derivation and refund-memo convention that still needs cryptographic review before live addresses. Its code availability is not proof of wallet rollout. Veylens does not generate those keys or recommend issuing live addresses from that draft.
 
 The defensible submission claim is: Veylens helps integration developers inspect refund-path evidence, detect public address reuse, and independently replay their findings. Its committed regression uses actual mined public-testnet transactions with operator-assigned roles. Actual provider refund attribution, authenticated shielded ownership and independent consensus remain separate evidence tasks.
+
+## Comparison evidence follow-up, October 23, 2026
+
+Comparisons now warn when a corrected case loses public source observations, their collector authentication, authenticated node inclusion observations, or authenticated provider status. Keeping the same transaction bytes, Merkle proof count or signed quote does not preserve these independent source claims. Warnings appear in the existing comparison results and exported comparison.
+
+Three regression checks passed, including stripping observation receipts from the committed mined-testnet case while retaining every raw transaction. The full 228-test suite, production build and executable submission replay passed. These checks do not supply new provider-refund, ownership or consensus evidence.
