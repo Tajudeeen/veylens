@@ -4,7 +4,13 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
-const arg = process.argv.find(a => a.startsWith('--manifest='));
+const args = process.argv.slice(2);
+if (args.some(a => a !== '--ci' && !a.startsWith('--manifest=')) || args.filter(a=>a.startsWith('--manifest=')).length>1) {
+  console.error('Usage: node scripts/check-zecathon.mjs [--ci] [--manifest=path]');
+  process.exit(2);
+}
+const ci = args.includes('--ci');
+const arg = args.find(a => a.startsWith('--manifest='));
 const manifestFile = arg ? resolve(process.cwd(), arg.slice(11)) : null;
 const checks = [];
 function check(id, ok, detail, statusOnFalse = 'fail') {
@@ -36,7 +42,18 @@ for (const path of ['examples/testnet-refund/collector-vulnerable.case.json','ex
 for (const name of ['index','workspace','compare','verify','methodology','demo']) {
   check('web:' + name, file('dist/client/' + name + '.html'), 'Compiled HTML output', 'unverified');
 }
-const manifest = manifestFile && existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : {};
+let manifest = {};
+if (manifestFile) {
+  if (!existsSync(manifestFile)) {
+    check('manifest',false,'Specified manifest does not exist');
+  } else {
+    try {
+      const data = JSON.parse(readFileSync(manifestFile,'utf8'));
+      if (data && typeof data === 'object' && !Array.isArray(data)) manifest=data;
+      else check('manifest',false,'Manifest must be a JSON object');
+    } catch (e) { check('manifest',false,'Cannot parse manifest: '+e.message); }
+  }
+}
 for (const [id, key, prompt] of [
   ['host-account','hostAccountVerified','Signed-in host account can submit'],
   ['track','hostTrackVerified','Exact host category, rules and eligibility read from logged-in portal'],
@@ -54,4 +71,4 @@ const output = { hackathon:'zkSNARKS Zecathon 2026', deadlineUTC:'2026-10-28T23:
   note:'This offline checker cannot validate host eligibility, deployed runtime secrets, external attestations, mainnet consensus, or ownership. A passed local check never upgrades unverified external claims.' };
 console.log(JSON.stringify(output,null,2));
 if (counts.fail) process.exitCode=2;
-else if (counts.unverified) process.exitCode=3;
+else if (counts.unverified && !ci) process.exitCode=3;
