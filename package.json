@@ -24,7 +24,8 @@
     "collector:keygen": "npm run build:core && node scripts/collector-keygen.mjs",
     "check:dependencies": "npm audit --audit-level=moderate",
     "build:budget": "node scripts/build-budget.mjs",
-    "build:core": "tsc -p tsconfig.json"
+    "build:core": "tsc -p tsconfig.json",
+    "check:zecathon": "node scripts/check-zecathon.mjs"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",
