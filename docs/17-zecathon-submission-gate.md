@@ -33,8 +33,8 @@ A developer importing a Zcash cross-chain transfer can inspect source transactio
 | --- | --- | --- |
 | A: Host account | Owner can access signed-in host portal and submit | Not checked |
 | B: Eligible track | Exact host track text recorded; Veylens meets it | Not checked |
-| C: Public judge access | Working HTTPS pages, no sign-in, usable on mobile | Deployment documented; fresh check needed |
-| D: Reproducible build | `npm ci && npm test && npm run build:web && npm run check:submission` passes on submission commit | Run on final commit |
+| C: Public judge access | Working HTTPS pages, no sign-in, usable on mobile | Six deployed pages and API returned HTTP 200 on 2026-10-26; clean-browser and physical-phone checks still needed |
+| D: Reproducible build | `npm ci && npm test && npm run build:web && npm run check:submission` passes on submission commit | Existing CI green for earlier commit; rerun all on final submission commit |
 | E: Real transaction evidence | Mainnet/testnet evidence explicitly classified and replayable | Public-testnet experiment committed; real provider refund absent |
 | F: Live collector | Server-side signer, budget service and source health operational | **PASS at 2026-10-26 smoke run** for signed historical mainnet/testnet collection; full-node inclusion remains unconfigured. [Run 40288820275](https://github.com/Tajudeeen/veylens/actions/runs/40288820275) |
 | G: Submission materials | Title, summary, category, source/demo links, video and any exact host-required fields | Pending portal inspection and final video |
@@ -83,6 +83,10 @@ npm run check:deployment -- --url https://veylens.vercel.app
 ```
 
 Only run `--require-node testnet` when such a node is configured. Document skipped checks and their reason.
+
+## Final manual handoff
+
+Before marking the submission complete, capture the signed-in portal's exact track/eligibility/submission fields, record the final demo video URL, test public navigation and import/verification on a physical phone, inspect that the sample report/source contains no credentials or sensitive wallet data, and save the submission receipt. The successful historical mainnet/testnet collector run is valid evidence of read-only collection, but not a provider refund demonstration. Check the final GitHub commit and production deployment independently.
 
 ## Outstanding priorities, in order
 
