@@ -1,0 +1,39 @@
+name: Veylens real app with original narration
+on:
+  push:
+    branches: [video/restore-original-voice-20261026]
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg espeak-ng
+      - name: Record actual app screenshots and render video
+        run: node scripts/render-zecathon-actual-app.mjs
+      - name: Retrieve original Descript narration
+        env:
+          ORIGINAL_DESCRIPT_VIDEO: "https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2F4bbd107a-3302-4884-bc80-fc9eb58bcfa5%2Fhls%3Fexpiration%3D1793096416663%26signature%3Dab50287d49e4f348e15b12f69e23769f5df680dd8ea890a9d17693c29ee1a198&filename=Veylens+Zecathon+2026+Two-Minute+Evidence+Demo.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1793092817&signature=3c673ad625b816094e1b1873ee24ac2940724abbbc0340beccab0bfe25a1487d"
+        run: |
+          curl --retry 2 --fail --location --silent --show-error "$ORIGINAL_DESCRIPT_VIDEO" -o video-output/first-video.mp4
+          test -s video-output/first-video.mp4
+          ffprobe -v error -select_streams a -show_entries stream=codec_name -of csv=p=0 video-output/first-video.mp4
+      - name: Replace synthetic narration with the actual first-video voiceover
+        run: |
+          ffmpeg -y -hide_banner -loglevel warning -i video-output/veylens-zecathon-actual-app.mp4 -i video-output/first-video.mp4 -filter_complex '[1:a]atempo=1.028,atrim=0:120,asetpts=PTS-STARTPTS[a]' -map 0:v:0 -map '[a]' -c:v copy -c:a aac -b:a 192k -t 120 -movflags +faststart video-output/veylens-actual-app-original-voice.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=nw=1 video-output/veylens-actual-app-original-voice.mp4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: Veylens-Actual-App-Original-Voice
+          path: |
+            video-output/veylens-actual-app-original-voice.mp4
+          retention-days: 30
