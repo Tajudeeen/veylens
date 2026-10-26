@@ -1,16 +1,14 @@
 # Vercel migration
 
-## Current state
+## Current state (October 26, 2026)
 
-Veylens 1.1.1 is serving at https://veylens.vercel.app. GitHub's Vercel integration reports successful deployment of commit `38ec9d4593ff77ef96699700e270f216bc2027ee`, with [deployment details](https://vercel.com/deeencodes/veylens/4A7EsdFekX329wKu2kH57fxciYfv). Public HTTP checks confirmed the pages and API routes. `/api/capabilities` reports version 1.1.1, `collectorSigning=false`, `collectionProtection=unavailable` and no configured full nodes. Live collection therefore remains unavailable while local import and replay can be used.
+Veylens 1.1.1 is publicly accessible at https://veylens.vercel.app. The six web pages and `/api/capabilities` returned HTTP 200 in the latest checks. The API reports `collectorSigning=true`, `collectorKeyId=veylens-vercel-2026-10`, and `collectionProtection=persistent-budget`. Mainnet and testnet historical transaction collection with independently checked pinned-key receipts succeeded in the [GitHub Actions live network smoke run 40288820275](https://github.com/Tajudeeen/veylens/actions/runs/40288820275). The test ran on commit `75ec1d8d6f98ae39e10d7bee6e60dffa10ed4126`; re-run after material collector changes.
 
-The connected Vercel API still returns 403 for the owner's `deeencodes` team, ID `team_raaAOk0abaIpiJkNOLg5lS7u`. It cannot set the required server secrets or finish runtime verification. The previous private ChatGPT Site has not been shut down or redirected and remains a fallback. Do not transfer its private signer or access token to the new deployment.
+Vercel team `deeencodes` is connected and its Production configuration contains all five required server variables. Sensitive values are not published. The earlier team-access 403 and disabled collector observations below were migration blockers, **now resolved**. Prior private ChatGPT Site records are retained as historical evidence, not as the public judge entry point. Full-node block inclusion is still unconfigured on both networks. Passing collector receipt verification does not imply independent consensus, wallet ownership or authentic provider-refund attribution.
 
-The dedicated budget Worker is deployed at `https://veylens-budget.tajudeenowoeteniyan.workers.dev/admit`. On October 21, 2026, an unsigned request returned 401, a signed synthetic admission succeeded, and the native D1 query showed its client and global counters. No case identifiers, Site access token or original collector private key were sent in that check. This verifies the admission backend, not the pending Vercel application deployment.
+The budget Worker remains at `https://veylens-budget.tajudeenowoeteniyan.workers.dev/admit`. It is an authenticated POST-only service; an unauthenticated GET returning 404 is not a health failure. The successful production signed smoke run exercises the budget admission path. During migration an unsigned request returned 401 and a separately signed synthetic admission succeeded; those old checks are distinct from the current production run.
 
-The migration code passed [GitHub verification run 39677625791](https://github.com/Tajudeeen/veylens/actions/runs/39677625791): 225 code tests, 20 desktop/mobile browser tests, both builds, submission checks and a dependency audit with zero reported vulnerabilities. [CodeQL run 39677625712](https://github.com/Tajudeeen/veylens/actions/runs/39677625712) completed and uploaded its analysis results. A completed scan is not an independent security audit or a claim of zero code defects.
-
-The owner-created Vercel project is publicly reachable. This migration did not change its audience, the previous Site's private access or the repository's existing public visibility. Keep secrets and evidence out of static assets. Local user cases remain browser-side, with explicit disclosure required for live collection.
+Historical build-failure and migration information is preserved in the sections below for troubleshooting. Current CI results and proof links in the [README](../README.md) take precedence over historical pass counts and deployment IDs.
 
 ## Architecture
 
@@ -69,7 +67,7 @@ CI also exercises desktop and mobile browser flows. A protected Vercel staging d
 
 Confirm all six pages, headers, direct routes, collector key metadata, capabilities, valid and invalid API requests, a shared rate denial, a fresh receipt and independent case replay. A portable source re-fetch intentionally discloses its public identifiers to the new collector and upstream source. Do not retry a previously blocked disclosure check without explicit authorization for that destination and payload.
 
-The README and quick start now point to the verified Vercel pages and explicitly disclose the unavailable live collector. Complete the API runtime checks before claiming a full collector cutover. Preserve the old Site as a rollback until then. Browser storage belongs to an origin: export encrypted snapshots from the old Site, then import them on Vercel. It will not see the old origin's local or session storage automatically.
+The README and quick start point to the verified Vercel pages. Production signed historical mainnet and testnet collection is operational as of the October 26 smoke run, though any future outage remains possible. The old private Site is retained solely for historical continuity; export/import encrypted snapshots if migrating stored local browser data. Browser storage belongs to an origin: export encrypted snapshots from the old Site, then import them on Vercel. It will not see the old origin's local or session storage automatically.
 
 ## Build-failure repair
 

@@ -1,6 +1,6 @@
 # Veylens 1.1 handover
 
-The Vercel migration and October 21 review follow-up are recorded in [the deployment guide](15-vercel-deployment.md) and [the claim review](16-review-claims.md). Vercel 1.1.1 pages and API routes are live, while collector runtime configuration is pending. The previous private Site remains a fallback until live collection is checked on the new deployment.
+The Vercel migration and October 21 review follow-up are recorded in [the deployment guide](15-vercel-deployment.md) and [the claim review](16-review-claims.md). Vercel 1.1.1 pages and API routes are live. Server signing, persistent D1 budget admission, and signed historical mainnet/testnet collection passed on October 26, 2026 ([GitHub Actions smoke run 40288820275](https://github.com/Tajudeeen/veylens/actions/runs/40288820275)). The earlier private Site is historical context, not the primary deployment.
 
 ## Code completed
 
@@ -17,7 +17,7 @@ The Vercel migration and October 21 review follow-up are recorded in [the deploy
 
 Sites provisions the logical `DB` binding from the hosting manifest using `"d1": "DB"` and applies the generated, append-only Drizzle migration. This table stores only rate-window HMAC digests, usage and expiry. It stores no raw IP addresses, transaction identifiers or evidence. Expired rows are pruned on subsequent allowed requests. Counters are admission controls, not a substitute for platform DDoS protection.
 
-`COLLECTOR_RATE_SECRET` must be a random secret of at least 32 characters. Keep `COLLECTOR_SIGNING_KEY` unchanged for the existing pinned key. Set `COLLECTOR_KEY_ID=veylens-2026-10`. Other runtime secrets are preserved.
+`COLLECTOR_RATE_SECRET` must be a random secret of at least 32 characters. Vercel Production now uses `COLLECTOR_KEY_ID=veylens-vercel-2026-10` with a separately provisioned matching private signer, while `veylens-2026-10` remains a trusted historical public key. Keep private signer material only in the secret manager. Rotate keys using the procedure below, never by reusing an existing key ID.
 
 A client gets 120 units per minute, and the deployed collector has a shared 1200-unit budget. Transaction collection costs 1, a node probe 2, an inclusion proof 4 and swap status 5. Identity uses the edge-provided CF-Connecting-IP. Shared gateways/NATs can share a budget. HTTP 429 includes Retry-After. Protection configuration failures return 503. The read-only local capture CLI bypasses this hosted admission layer, remains capped at 20 transactions and never creates a transaction or deposit.
 
@@ -36,10 +36,12 @@ npm run build:web
 npm run check:submission
 npm run test:browser
 npm run check:deployment -- --url https://your-site --case examples/testnet-refund/collector-vulnerable.case.json
-npm run check:deployment -- --url https://your-site --require-node testnet
+node scripts/check-live-networks.mjs --url https://veylens.vercel.app
+# Optional ONLY when a full testnet node is configured:
+# npm run check:deployment -- --url https://veylens.vercel.app --require-node testnet
 ```
 
-For a private Site, provide `VEYLENS_SITE_TOKEN` through the process environment. Never place it in a URL, command argument, source file or report. A required but missing node exits 3. Failed checks exit nonzero. These commands make read-only requests, and the optional case check discloses its public transaction IDs to the collector and configured source.
+The former private Site's `VEYLENS_SITE_TOKEN` instructions are legacy only, not needed for the public Vercel deployment. Never place credentials in a URL, command argument, source file or report. A required but missing node exits 3. Failed checks exit nonzero. These commands make read-only requests, and the optional case check discloses its public transaction IDs to the collector and configured source.
 
 ## Key rotation procedure
 
@@ -54,7 +56,7 @@ No key is trusted because a receipt or an API response supplies it. Trust change
 
 - Obtain an attributed real integration refund with its original non-dry provider records. The committed public-testnet experiment has operator-assigned refund roles.
 - Run physical-device QA. Chromium mobile emulation is automated coverage, not a test on the owner's phone.
-- Arrange explicit reviewer access to the private Site. The GitHub source is public as checked on October 21, 2026.
+- Confirm public judge access to the Vercel URL on a clean browser/mobile device; the old private Site is not the judge entry point.
 - Record the final demo and submit the required materials.
 
 Wallet exports remain assertions. Full chain consensus, shielded delivery and wallet ownership are outside the v1.1 evidence contract. No UI, receipt, health check or passing test upgrades those claims.
