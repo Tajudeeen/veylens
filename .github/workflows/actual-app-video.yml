@@ -3,6 +3,7 @@ on:
   push:
     branches: [video/actual-app-zecathon-20261026]
   workflow_dispatch:
+  pull_request:
 permissions:
   contents: read
 jobs:
