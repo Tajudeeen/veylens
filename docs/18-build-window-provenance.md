@@ -31,11 +31,19 @@ git tag -l
 
 For a complete determination, inspect every remote/local branch, tags, PR commit history and any development repository or worktree where the imported v0.6.0 was written. Commit author dates are not cryptographic creation timestamps and may be rewritten. A post-start upload is not proof of post-start authorship, and third-party libraries must be distinguished from original code.
 
+## Earlier conversational development record (recovered October 12)
+
+The project owner supplied the original shared [development conversation](https://claude.ai/share/d24d4b7b-effa-457f-b372-96fc7f6a2451), originally titled **“Zcash codebase audit and vulnerability analysis”**. The owner later continued the project in a ChatGPT development environment. The recovered 30-record transcript was archived on **2026-10-12 at approximately 16:49 UTC** as `Veylens-Claude-Conversation.md` (a separate development archive; not committed here). Its first exposed message is dated **2026-10-11 10:22:04 UTC**, after the stated hackathon window opened on September 28.
+
+The transcript records the transition from the initial **Veil Check** concept to **Veylens**, and contains discussion and reported development of a privacy audit engine, four diagnostic rules, a CLI, Ed25519 signed reports, and a browser application through approximately v0.3.0. It precedes the [October 12 v0.6.0 GitHub import](https://github.com/Tajudeeen/veylens/commit/61b7e493c). The October 12 continuation then reported v0.4.0 with 109 tests and v0.6.0 with 151 tests and transaction-vector support, prior to or around the GitHub import.
+
+**Evidence quality and limits:** The recovered transcript's tool execution inputs/outputs are substantially empty or redacted, and no original downloadable source bundle was recovered from it. Statements about earlier test counts or generated code are historical conversation claims, **not** independently verified CI results. The first GitHub import and subsequent successful CI independently attest to the imported repository state, but cannot prove each source line's creation date. The shared conversation may change access status; keep a privately archived copy for the organizer, with unrelated sensitive information removed before sharing. Do not commit the unredacted archive, secrets or any inferred code authorship certificate.
+
 ## Evidence to attach if the organizer questions eligibility
 
 1. Original worktree or earlier repository history showing file creation and incremental commits during the allowed window, particularly **September 28 to October 12**.
 2. Contemporaneous Codespaces creation/activity records, relevant file-version history, build/test logs, deployment timestamps, and GitHub Actions runs.
-3. Dated design notes and prompts/screenshots from the actual development process, with secrets and unrelated personal information redacted. These support chronology but do not prove code authorship on their own.
+3. The original [shared development conversation](https://claude.ai/share/d24d4b7b-effa-457f-b372-96fc7f6a2451) and locally retained `Veylens-Claude-Conversation.md` archive; dated design notes and development screenshots, all reviewed for secrets. These support chronology but do not prove code authorship on their own.
 4. A dependency/license declaration distinguishing installed third-party libraries and official test vectors from Veylens's original code.
 5. If evidence for imported v0.6.0 is incomplete, an honest clarification from the organizers about the rule's application to a new project whose initial source was imported into this repository during the window.
 
