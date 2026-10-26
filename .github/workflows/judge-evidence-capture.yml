@@ -1,5 +1,6 @@
 name: Judge evidence capture
 on:
+  pull_request:
   push:
     branches: [video/judge-evidence-capture-20261026]
 permissions:
