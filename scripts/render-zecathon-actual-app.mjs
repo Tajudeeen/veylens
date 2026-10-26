@@ -39,6 +39,6 @@ for(let i=0;i<sections.length;i++){
  call('ffmpeg',['-y','-hide_banner','-loglevel','error','-loop','1','-framerate','12','-i',root+'/'+name+'.png','-i',wav,'-vf',vf,'-af','apad','-t',String(seconds),'-r','24','-c:v','libx264','-preset','veryfast','-crf','24','-c:a','aac','-b:a','128k','-shortest',vid]);
  files.push(vid);
 }
-writeFileSync(root+'/parts.txt',files.map(x=>'file '+JSON.stringify(x.split('/').pop())).join('\n'));
+writeFileSync(root+'/parts.txt',files.map(x=>"file '"+x.split('/').pop()+"'").join('\n'));
 call('ffmpeg',['-y','-hide_banner','-loglevel','error','-f','concat','-safe','0','-i',root+'/parts.txt','-c','copy','-movflags','+faststart',root+'/veylens-zecathon-actual-app.mp4']);
 console.log('VIDEO_READY '+root+'/veylens-zecathon-actual-app.mp4');
