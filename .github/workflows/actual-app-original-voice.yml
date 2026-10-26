@@ -1,5 +1,6 @@
 name: Veylens real app with original narration
 on:
+  pull_request:
   push:
     branches: [video/restore-original-voice-20261026]
 permissions:
