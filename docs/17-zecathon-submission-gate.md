@@ -100,3 +100,7 @@ Before marking the submission complete, capture the signed-in portal's exact tra
 ## Distinct value relative to upstream mitigation
 
 Veylens is a **post-integration regression and evidence tool**. Address-generation fixes, such as per-swap viewing-key isolation, can prevent a future exposure; Veylens tests recorded behavior and compares regressions. It does not replace wallet protections or prove universal transaction unlinkability.
+
+## Build-window provenance audit (2026-10-26)
+
+See [the evidence-based Git chronology and limitations](18-build-window-provenance.md). The repository was created 2026-10-12, and all 32 commits currently on default-branch history are dated 2026-10-12 through 2026-10-26. The first substantial commit imports v0.6.0 with 151 tests, so commit dates alone cannot establish when imported code was originally authored. Collect contemporaneous development records before claiming that **all** code was written inside the window. This is an eligibility question for the organizers, not something a repository timestamp can certify.
