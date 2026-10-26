@@ -1,5 +1,6 @@
 name: Capture Veylens splash and real cursor navigation
 on:
+  pull_request:
   push:
     branches: [video/real-navigation-footage-20261026]
 permissions:
