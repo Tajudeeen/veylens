@@ -18,17 +18,13 @@ from source assertions, and export reports that others can independently replay.
 - [Vercel migration and cutover status](docs/15-vercel-deployment.md)
 - [Security disclosure policy](SECURITY.md) and [contribution guide](CONTRIBUTING.md)
 
-The Vercel pages and API routes are live and publicly reachable. Live collection
-is currently disabled until server signing and budget secrets are configured.
-Local import, analysis and replay work without those secrets. The GitHub repository
-is public as checked on October 21, 2026. Examples contain public test
-transactions. The working workspace starts empty and never substitutes fixtures
-when an upstream request fails.
-
-Vercel deployment succeeded for version 1.1.1. Runtime setup remains blocked by
-the connected account's missing access to the owner's Vercel team. The previous
-[private Site](https://veylens-privacy-workspace.deeen-code.chatgpt.site/) remains
-a fallback until live collection is checked on Vercel.
+The Vercel pages and API routes are publicly reachable. The production signer and
+persistent budget admission are configured. On October 26, 2026, a GitHub Actions
+[mainnet + testnet smoke run](https://github.com/Tajudeeen/veylens/actions/runs/40288820275)
+passed read-only collection of historical transactions with authenticated collector
+receipts. This is a point-in-time check, not a continuous availability guarantee.
+Local import, analysis and replay remain available independently. The working
+workspace starts empty and never substitutes fixtures when an upstream request fails.
 
 ## Current release: 1.1.1
 
@@ -81,6 +77,13 @@ npm run test:browser
 Mobile emulation does not replace physical-device testing. See the completion checklist and release
 verification record for what has actually run in each environment.
 
+## Production mainnet and testnet verification
+
+- **Successful hosted smoke run (October 26, 2026):** [Live Zcash network smoke, run 40288820275](https://github.com/Tajudeeen/veylens/actions/runs/40288820275). The `read-only-live-verification` job passed dependency audit, build and real historical mainnet + testnet signed collection.
+- **Reproducible workflow:** [`.github/workflows/live-networks.yml`](.github/workflows/live-networks.yml) and [`scripts/check-live-networks.mjs`](scripts/check-live-networks.mjs).
+- **Local reproduction:** `npm run build:core && node scripts/check-live-networks.mjs --url https://veylens.vercel.app`.
+- **Evidence limits:** Collector signatures attest to collected source data, not independent chain consensus, wallet ownership, shielded delivery or genuine provider refund attribution. Full-node inclusion remains unconfigured.
+
 ## Real public-testnet experiment
 
 The collector-vulnerable and collector-corrected case files include pinned-key receipts from the deployed collector. The committed case files contain mined public-Testnet wallet transactions for
@@ -118,7 +121,7 @@ local imports and replay but cannot supply the collector API.
 | Runtime variable | Purpose |
 | --- | --- |
 | COLLECTOR_RATE_SECRET | Random server-only HMAC secret for persistent request budgets |
-| COLLECTOR_KEY_ID | Active pinned key ID, currently veylens-2026-10 |
+| COLLECTOR_KEY_ID | Active pinned key ID on Vercel: veylens-vercel-2026-10 |
 | COLLECTOR_SIGNING_KEY | Existing pinned collector's PKCS8 Ed25519 key, as a runtime secret |
 | ONECLICK_API_KEY | Optional server-only provider bearer credential |
 | ZCASH_MAINNET_RPC_URL / ZCASH_MAINNET_RPC_AUTH | Optional mainnet full node and authorization |

@@ -24,7 +24,7 @@ A developer importing a Zcash cross-chain transfer can inspect source transactio
 2. Inspect the identified reused public shielding-source address and transparent refund output. State explicitly that the testnet refund role is assigned by the experiment operator.
 3. Export the signed report and exact case source. Open https://veylens.vercel.app/verify.html and independently replay, then intentionally alter evidence to demonstrate rejection.
 4. Compare with `examples/testnet-refund/collector-corrected.case.json`. Explain why the removed finding still results in **insufficient evidence** rather than a privacy certificate.
-5. Optionally inspect a real historical Zcash mainnet transaction using the documented read-only endpoint, if production collection has been verified as available.
+5. Demonstrate a real historical Zcash mainnet transaction using the documented read-only endpoint, referencing the successful [GitHub Actions live smoke run](https://github.com/Tajudeeen/veylens/actions/runs/40288820275). This verifies signed collection, not a live integration refund.
 6. Show the source, test commands, limitations and license. Never claim a live integration refund was proved without actual authenticated non-dry provider records.
 
 ## Submission gate
@@ -36,7 +36,7 @@ A developer importing a Zcash cross-chain transfer can inspect source transactio
 | C: Public judge access | Working HTTPS pages, no sign-in, usable on mobile | Deployment documented; fresh check needed |
 | D: Reproducible build | `npm ci && npm test && npm run build:web && npm run check:submission` passes on submission commit | Run on final commit |
 | E: Real transaction evidence | Mainnet/testnet evidence explicitly classified and replayable | Public-testnet experiment committed; real provider refund absent |
-| F: Live collector | Server-side signer, budget service and source health operational | Vercel secrets/budget outstanding |
+| F: Live collector | Server-side signer, budget service and source health operational | **PASS at 2026-10-26 smoke run** for signed historical mainnet/testnet collection; full-node inclusion remains unconfigured. [Run 40288820275](https://github.com/Tajudeeen/veylens/actions/runs/40288820275) |
 | G: Submission materials | Title, summary, category, source/demo links, video and any exact host-required fields | Pending portal inspection and final video |
 | H: Evidence safety | No wallet seed, auth token, memo or private key in exports, repo or demo | Must check before final publish |
 | I: Delivery | Host acknowledges submission before 2026-10-28 23:59 UTC | Pending |
@@ -50,6 +50,13 @@ A developer importing a Zcash cross-chain transfer can inspect source transactio
 - No UI health flag may claim live collecting is available until a fresh deployed smoke check passes.
 - Never reveal, collect or export wallet seeds, viewing keys or identifiable shielded wallet content for a demo.
 - Do not merge dependency-major upgrades near submission without an isolated build, full tests and browser regression.
+
+## Independent live-network run evidence
+
+- [Successful GitHub Actions run 40288820275](https://github.com/Tajudeeen/veylens/actions/runs/40288820275), workflow dispatch at 2026-10-26 07:55 UTC, commit `75ec1d8d6f98ae39e10d7bee6e60dffa10ed4126`.
+- Workflow job `read-only-live-verification`: checkout, `npm ci`, dependency security check, `npm run build:core`, live mainnet and testnet signed collection all succeeded.
+- [Workflow definition](../.github/workflows/live-networks.yml) and [smoke implementation](../scripts/check-live-networks.mjs).
+- Both transactions are existing historical records; the test neither creates new transactions nor establishes consensus, provider attribution, wallet ownership or shielded delivery.
 
 ## Demo outline (approximately 2 minutes)
 
@@ -80,8 +87,8 @@ Only run `--require-node testnet` when such a node is configured. Document skipp
 ## Outstanding priorities, in order
 
 1. Read signed-in track/rubric/submission requirements verbatim and select the truthful category.
-2. Restore Vercel collector signing and persistent D1 budget admission without putting secrets into source.
-3. Execute the deployed smoke test and independent replay of the public-testnet case.
+2. **Completed 2026-10-26:** Vercel collector signing and persistent D1 budget admission were configured without putting secrets into source.
+3. **Completed 2026-10-26:** deployed read-only historical mainnet/testnet smoke verified in [run 40288820275](https://github.com/Tajudeeen/veylens/actions/runs/40288820275); independently replay the public-testnet case as a separate demo step.
 4. Acquire an authentic, permissioned non-dry refund case only if available. Never manufacture attribution or make financial transfers just for a demonstration.
 5. Complete physical-phone navigation/import/verify checks.
 6. Record the demo and submit by the host deadline; keep the host receipt.
