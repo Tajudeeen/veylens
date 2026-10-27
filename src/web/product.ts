@@ -5,6 +5,8 @@ import {loadInput,checkSigned,checkSourceFromInput} from './app.js';
 import {initContinuity,takeVerifierHandoff,validateStoredInput} from './continuity.js';
 import {inspectReceiver} from '../receivers.js';
 import {decodeZcashTransaction} from '../zcash.js';
+import {inject} from '@vercel/analytics';
+inject();
 const get=(id:string)=>document.getElementById(id);
 const value=(id:string)=>(get(id) as HTMLInputElement).value.trim();
 const status=(text:string)=>{const out=get('intake-status');if(out)out.textContent=text;};

@@ -28,15 +28,15 @@
     "check:zecathon": "node scripts/check-zecathon.mjs"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "5.20261021.1",
+    "@playwright/test": "1.64.1",
     "@types/jsdom": "^30.0.0",
     "@types/node": "^26.6.5",
+    "drizzle-kit": "0.31.10",
+    "drizzle-orm": "0.45.2",
     "esbuild": "^0.28.2",
     "jsdom": "^30.1.2",
-    "typescript": "^5.6.3",
-    "@playwright/test": "1.64.1",
-    "@cloudflare/workers-types": "5.20261021.1",
-    "drizzle-kit": "0.31.10",
-    "drizzle-orm": "0.45.2"
+    "typescript": "^5.6.3"
   },
   "engines": {
     "node": "24.x"
@@ -44,7 +44,8 @@
   "dependencies": {
     "@defuse-protocol/one-click-sdk-typescript": "0.1.26",
     "@noble/hashes": "1.8.0",
-    "@scure/base": "1.2.6"
+    "@scure/base": "1.2.6",
+    "@vercel/analytics": "^2.0.1"
   },
   "overrides": {
     "@esbuild-kit/core-utils": {
